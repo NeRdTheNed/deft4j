@@ -6,20 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.StringJoiner;
 
 /** Static utility methods which don't require any dependencies */
 public final class Util {
     private static String binStr(char value) {
         return String.valueOf((int) value);
-    }
-
-    /** Creates a new array with the contents of both arrays */
-    public static int[] combine(int[] a1, int[] a2) {
-        final int[] combined = new int[a1.length + a2.length];
-        System.arraycopy(a1, 0, combined, 0, a1.length);
-        System.arraycopy(a2, 0, combined, a1.length, a2.length);
-        return combined;
     }
 
     /** Check if the byte array only contains this value */
@@ -42,6 +35,44 @@ public final class Util {
         }
 
         return true;
+    }
+
+    /** Creates a new array with the contents of both arrays */
+    public static int[] combine(int[] a1, int[] a2) {
+        final int[] combined = new int[a1.length + a2.length];
+        System.arraycopy(a1, 0, combined, 0, a1.length);
+        System.arraycopy(a2, 0, combined, a1.length, a2.length);
+        return combined;
+    }
+
+    /** Reads the contents of an input stream to a byte array */
+    public static byte[] convertInputStreamToBytes(InputStream in) throws IOException {
+        final ByteArrayOutputStream result = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[1024];
+        int length;
+
+        while ((length = in.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+        }
+
+        return result.toByteArray();
+    }
+
+    /** Returns the extension of this file, or an empty String if it doesn't have one */
+    public static String getFileExtension(File file) {
+        final String name = file.getName();
+        final int extLocation = name.lastIndexOf(".");
+        return extLocation > 0 ? name.substring(extLocation) : "";
+    }
+
+    /** Returns the extension of this file, or an empty String if it doesn't have one */
+    public static String getFileExtension(Path path) {
+        return getFileExtension(path.toFile());
+    }
+
+    /** Returns the extension of this file, or an empty String if it doesn't have one */
+    public static String getFileExtension(String fileName) {
+        return getFileExtension(new File(fileName));
     }
 
     /** Rough "is printable character" check */

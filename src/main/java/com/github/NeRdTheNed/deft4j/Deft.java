@@ -16,8 +16,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.compress.utils.FileNameUtils;
-
 import com.github.NeRdTheNed.deft4j.container.DeflateFilesContainer;
 import com.github.NeRdTheNed.deft4j.container.GZFile;
 import com.github.NeRdTheNed.deft4j.container.PNGFile;
@@ -25,6 +23,7 @@ import com.github.NeRdTheNed.deft4j.container.RawDeflateFile;
 import com.github.NeRdTheNed.deft4j.container.ZLibFile;
 import com.github.NeRdTheNed.deft4j.container.ZipFile;
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
+import com.github.NeRdTheNed.deft4j.util.Util;
 import com.github.NeRdTheNed.deft4j.util.compression.CompressionUtil;
 import com.github.NeRdTheNed.deft4j.util.compression.CompressionUtil.Strategy;
 
@@ -172,7 +171,7 @@ public class Deft {
 
     /** Attempts to detect the format of a file from only the file name, and returns a container suitable for reading it with */
     public static DeflateFilesContainer getContainerForFilename(String filename) {
-        return getContainerForExt(FileNameUtils.getExtension(filename));
+        return getContainerForExt(Util.getFileExtension(filename));
     }
 
     /** Attempts to detect the format of a file from only the extension, and returns a container suitable for reading it with */
@@ -326,7 +325,7 @@ public class Deft {
 
         if (Files.isRegularFile(output)) {
             overwrite = true;
-            String ext = FileNameUtils.getExtension(input);
+            String ext = Util.getFileExtension(input);
 
             if ("".equals(ext)) {
                 ext = null;

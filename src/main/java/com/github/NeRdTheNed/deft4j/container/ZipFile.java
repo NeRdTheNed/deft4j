@@ -5,16 +5,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.commons.compress.utils.Lists;
-
 import com.github.NeRdTheNed.deft4j.container.lljzip.RecalculatingZipWriter;
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
+import com.github.NeRdTheNed.deft4j.util.Util;
 
 import software.coley.lljzip.ZipIO;
 import software.coley.lljzip.format.compression.ZipCompressions;
@@ -53,7 +52,7 @@ public class ZipFile implements DeflateFilesContainer {
 
     @Override
     public List<DeflateStream> getDeflateStreams() {
-        return Lists.newArrayList(deflateStreamMap.values().iterator());
+        return new ArrayList<>(deflateStreamMap.values());
     }
 
     @Override
@@ -66,7 +65,7 @@ public class ZipFile implements DeflateFilesContainer {
 
     @Override
     public boolean read(InputStream is) throws IOException {
-        final byte[] zipBytes = IOUtils.toByteArray(is);
+        final byte[] zipBytes = Util.convertInputStreamToBytes(is);
         archive = ZipIO.readStandard(zipBytes);
 
         // If we failed to detect any files, it's likely a parsing error
