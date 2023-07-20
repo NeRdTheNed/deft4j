@@ -298,26 +298,42 @@ public class DeflateStream {
         DeflateBlock currentBlock = getFirstBlock();
 
         while (currentBlock != null) {
-            pos += 3;
-            final DeflateBlock optimisedBlock = optimiseBlock(currentBlock, pos);
-            final long currentSaved = currentBlock.getSizeBits(pos) - optimisedBlock.getSizeBits(pos);
+            if (currentBlock.getUncompressedData().length > 0) {
+                pos += 3;
+                final DeflateBlock optimisedBlock = optimiseBlock(currentBlock, pos);
+                final long currentSaved = currentBlock.getSizeBits(pos) - optimisedBlock.getSizeBits(pos);
 
-            if ((optimisedBlock != currentBlock) && (currentSaved > 0)) {
-                saved += currentSaved;
+                if ((optimisedBlock != currentBlock) && (currentSaved > 0)) {
+                    saved += currentSaved;
 
-                if (PRINT_OPT_FINE) {
-                    System.out.println("Saved " + currentSaved + " bits in block " + block);
+                    if (PRINT_OPT_FINE) {
+                        System.out.println("Saved " + currentSaved + " bits in block " + block);
+                    }
+
+                    currentBlock.replace(optimisedBlock);
+                    currentBlock = optimisedBlock;
+
+                    if (first) {
+                        setFirstBlock(optimisedBlock);
+                    }
                 }
 
-                currentBlock.replace(optimisedBlock);
-                currentBlock = optimisedBlock;
+                pos += currentBlock.getSizeBits(pos);
+            } else {
+                final long currentSaved = currentBlock.getSizeBits(pos + 3) + 3;
+
+                if (PRINT_OPT_FINE) {
+                    System.out.println("Removed empty block " + block + ", saved " + currentSaved + " bits");
+                }
+
+                saved += currentSaved;
+                currentBlock.remove();
 
                 if (first) {
-                    setFirstBlock(optimisedBlock);
+                    setFirstBlock(currentBlock.getNext());
                 }
             }
 
-            pos += currentBlock.getSizeBits(pos);
             block++;
             currentBlock = currentBlock.getNext();
             first = false;

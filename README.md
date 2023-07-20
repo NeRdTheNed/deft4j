@@ -13,6 +13,7 @@ deft4j implements a few deflate stream optimisations:
 - An attempt at re-encoding dynamic headers is made, although this should be improved in the future.
 - Type 2 blocks are tested to see if they would be smaller when encoded as type 1 blocks.
 - Trailing zero-length codelength lengths are removed from dynamic headers.
+- Empty blocks are removed.
 
 Future work includes:
 - Merging type 0 and 1 blocks, as well as type 2 blocks which have the same huffman trees.

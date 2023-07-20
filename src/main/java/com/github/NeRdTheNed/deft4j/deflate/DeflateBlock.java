@@ -103,6 +103,16 @@ public abstract class DeflateBlock {
         setPrevious(block);
     }
 
+    public void remove() {
+        if (prevBlock != null) {
+            prevBlock.setNext(nextBlock);
+        }
+
+        if (nextBlock != null) {
+            nextBlock.setPrevious(prevBlock);
+        }
+    }
+
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */
     static byte[] readSlice(final long initialBackDist, final long initialSize, final DeflateBlock thisBlock, final byte[] thisBlockData, final long thisBlockSize) {
         assert initialBackDist <= Constants.LZZ_BACKREF_LEN;
