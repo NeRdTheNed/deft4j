@@ -14,6 +14,14 @@ public final class Util {
         return String.valueOf((int) value);
     }
 
+    /** Creates a new array with the contents of both arrays */
+    public static int[] combine(int[] a1, int[] a2) {
+        final int[] combined = new int[a1.length + a2.length];
+        System.arraycopy(a1, 0, combined, 0, a1.length);
+        System.arraycopy(a2, 0, combined, a1.length, a2.length);
+        return combined;
+    }
+
     /** Check if the byte array only contains this value */
     public static boolean checkAllValue(byte[] bytes, byte value) {
         for (final byte b : bytes) {

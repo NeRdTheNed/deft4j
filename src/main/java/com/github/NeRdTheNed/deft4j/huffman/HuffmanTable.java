@@ -3,6 +3,8 @@ package com.github.NeRdTheNed.deft4j.huffman;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.NeRdTheNed.deft4j.util.Util;
+
 /**
  * Implements a Huffman code table.
  * @author Ridge Shrubsall (21112211)
@@ -35,8 +37,7 @@ public class HuffmanTable {
      */
     public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen) {
         final List<Integer> lengths = new ArrayList<>();
-        pack(lengths, litCodeLen);
-        pack(lengths, distCodeLen);
+        pack(lengths, Util.combine(litCodeLen, distCodeLen));
         return lengths;
     }
 
