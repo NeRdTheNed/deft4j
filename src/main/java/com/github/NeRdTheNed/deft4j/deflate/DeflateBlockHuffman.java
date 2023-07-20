@@ -214,8 +214,11 @@ public class DeflateBlockHuffman extends DeflateBlock {
             return;
         }
 
-        sizeBits -= replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
-        sizeBits -= replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
+        long savedHeader = 0;
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
+        sizeBits -= savedHeader;
+        dynamicHeaderSizeBits -= savedHeader;
     }
 
     /** Removes trailing zero-length codelens from the codelen lengths */
@@ -257,7 +260,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         // TODO Backrefs / check if sequence is in backref codebook
         final long original = sizeBits;
         replaceBackrefsWithLiteralsIfSmaller();
-        sizeBits -= removeDynHeaderTrailingZeroLenCodelens(true);
+        final long savedHeader = removeDynHeaderTrailingZeroLenCodelens(true);
+        sizeBits -= savedHeader;
+        dynamicHeaderSizeBits -= savedHeader;
         replaceRLERunsWithLiteralsIfSmaller();
         return original - sizeBits;
     }
