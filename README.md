@@ -12,6 +12,7 @@ deft4j implements a few deflate stream optimisations:
 - Similarly, if a RLE instruction in a dynamic tree header is larger than the equivalent sequence of literals, it replaces the instruction with literals.
 - An attempt at re-encoding dynamic headers is made, although this should be improved in the future.
 - Type 2 blocks are tested to see if they would be smaller when encoded as type 1 blocks.
+- Trailing zero-length codelength lengths are removed from dynamic headers.
 
 Future work includes:
 - Merging type 0 and 1 blocks, as well as type 2 blocks which have the same huffman trees.

@@ -14,6 +14,28 @@ public final class Util {
         return String.valueOf((int) value);
     }
 
+    /** Check if the byte array only contains this value */
+    public static boolean checkAllValue(byte[] bytes, byte value) {
+        for (final byte b : bytes) {
+            if (b != value) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** Check if the byte array only contains zero */
+    public static boolean checkAllZero(byte[] bytes) {
+        for (final byte b : bytes) {
+            if (b != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** Rough "is printable character" check */
     public static boolean isPrintable(char value) {
         return !Character.isISOControl(value) && (Character.isLetterOrDigit(value) || Character.isWhitespace(value) || Character.isValidCodePoint(value));

@@ -109,7 +109,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
     // Debug print flags
     private static final boolean DEBUG_PRINT_OPT = Deft.PRINT_OPT_FINER;
     private static final boolean DEBUG_PRINT_OPT_REFREPLACE = DEBUG_PRINT_OPT;
-    private static final boolean DEBUG_PRINT_OPT_UNUSEDLENS = DEBUG_PRINT_OPT;
+    private static final boolean DEBUG_PRINT_OPT_UNUSED = DEBUG_PRINT_OPT;
+    private static final boolean DEBUG_PRINT_OPT_UNUSED_CODELENS = DEBUG_PRINT_OPT_UNUSED;
 
     private static final String DEBUG_PRINT_OPT_PRE = "Optimisation ";
     private static final String DEBUG_PRINT_OPT_POST = ": ";
@@ -118,11 +119,12 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private static final String RUN_REPLACE = "replace RLE runs with literals if shorter";
     private static final String DYNAMIC_HEADER = "dynamic header";
 
-    private static final String REMOVE_TRALING = DYNAMIC_HEADER + " remove trailing zero-length codelens";
+    private static final String REMOVE_TRALING = DYNAMIC_HEADER + " remove trailing ";
+    private static final String REMOVE_TRALING_CODELENS = REMOVE_TRALING + "zero-length codelens";
 
     private static final String DEBUG_PRINT_OPT_REFREPLACE_STR = DEBUG_PRINT_OPT_PRE + MATCH_REPLACE + DEBUG_PRINT_OPT_POST;
     private static final String DEBUG_PRINT_OPT_RUNREPLACE_STR = DEBUG_PRINT_OPT_PRE + RUN_REPLACE + DEBUG_PRINT_OPT_POST;
-    private static final String DEBUG_PRINT_OPT_UNUSEDLENS_STR = DEBUG_PRINT_OPT_PRE + REMOVE_TRALING + DEBUG_PRINT_OPT_POST;
+    private static final String DEBUG_PRINT_OPT_UNUSED_CODELENS_STR = DEBUG_PRINT_OPT_PRE + REMOVE_TRALING_CODELENS + DEBUG_PRINT_OPT_POST;
 
     /**
      * Replaces backrefs / RLE encoded codelens with literals
@@ -243,14 +245,20 @@ public class DeflateBlockHuffman extends DeflateBlock {
         if (lastZero > lastNonZero) {
             numCodelenLens = lastZero;
 
-            if (DEBUG_PRINT_OPT_UNUSEDLENS && print) {
-                System.out.println(DEBUG_PRINT_OPT_UNUSEDLENS_STR + "Removed zero length code " + Constants.codelen_lengths_order[lastZero] + " at index " + lastZero);
+            if (DEBUG_PRINT_OPT_UNUSED_CODELENS && print) {
+                System.out.println(DEBUG_PRINT_OPT_UNUSED_CODELENS_STR + "Removed zero length code " + Constants.codelen_lengths_order[lastZero] + " at index " + lastZero);
             }
 
             return 3 + removeDynHeaderTrailingZeroLenCodelens(print);
         }
 
         return 0;
+    }
+
+    public void removeTrailingHeaderCodes(boolean print) {
+        final long savedHeader = removeDynHeaderTrailingZeroLenCodelens(print);
+        sizeBits -= savedHeader;
+        dynamicHeaderSizeBits -= savedHeader;
     }
 
     @Override
@@ -260,9 +268,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         // TODO Backrefs / check if sequence is in backref codebook
         final long original = sizeBits;
         replaceBackrefsWithLiteralsIfSmaller();
-        final long savedHeader = removeDynHeaderTrailingZeroLenCodelens(true);
-        sizeBits -= savedHeader;
-        dynamicHeaderSizeBits -= savedHeader;
+        removeTrailingHeaderCodes(true);
         replaceRLERunsWithLiteralsIfSmaller();
         return original - sizeBits;
     }
@@ -283,7 +289,6 @@ public class DeflateBlockHuffman extends DeflateBlock {
         codelenLengths = new int[Constants.MAX_CODELEN_LENS];
         System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
         numCodelenLens = Constants.MAX_CODELEN_LENS;
-        removeDynHeaderTrailingZeroLenCodelens(false);
         dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
         int i = 0;
         final Iterator<Integer> iter = repack.iterator();
@@ -355,6 +360,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         assert !iter.hasNext();
         sizeBits += dynamicHeaderSizeBits;
+        removeTrailingHeaderCodes(false);
     }
 
     public void recodeToFixedHuffman() {
