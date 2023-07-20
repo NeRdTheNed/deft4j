@@ -1,5 +1,7 @@
 package com.github.NeRdTheNed.deft4j;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -337,10 +339,10 @@ public class Deft {
         boolean returnVal = false;
 
         try
-            (FileInputStream fis = new FileInputStream(input.toFile());
-                    FileOutputStream fos = new FileOutputStream(possibleTempPath.toFile())) {
+            (InputStream is = new BufferedInputStream(new FileInputStream(input.toFile()));
+                    OutputStream os = new BufferedOutputStream(new FileOutputStream(possibleTempPath.toFile()))) {
             final DeflateFilesContainer container = raw ? new RawDeflateFile() : format != null ? getContainerForExt(format) : getContainerForPath(input);
-            returnVal = optimise(fis, fos, container);
+            returnVal = optimise(is, os, container);
 
             if (!returnVal) {
                 System.err.println("Failed to optimise input file");
