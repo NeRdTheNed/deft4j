@@ -42,6 +42,13 @@ public class HuffmanTable {
         return lengths;
     }
 
+    // TODO Try other combinations (5 & 3 etc)
+    private static final int FIRST_8 = 4;
+    private static final int SECOND_8 = 4;
+
+    private static final int FIRST_7 = 4;
+    private static final int SECOND_7 = 3;
+
     /**
      * Pack an array of codelengths.
      * (see RFC 1951, section 3.2.7)
@@ -92,9 +99,9 @@ public class HuffmanTable {
                             // Use 4 + 4 instead of 6 + single + single
                             if (runLength == 8) {
                                 lengths.add(16);
-                                lengths.add(4 - 3);
+                                lengths.add(FIRST_8 - 3);
                                 lengths.add(16);
-                                lengths.add(4 - 3);
+                                lengths.add(SECOND_8 - 3);
                                 runLength -= 8;
                                 break;
                             }
@@ -102,9 +109,9 @@ public class HuffmanTable {
                             // Use 4 + 3 instead of 6 + single
                             if (runLength == 7) {
                                 lengths.add(16);
-                                lengths.add(4 - 3);
+                                lengths.add(FIRST_7 - 3);
                                 lengths.add(16);
-                                lengths.add(3 - 3);
+                                lengths.add(SECOND_7 - 3);
                                 runLength -= 7;
                                 break;
                             }
