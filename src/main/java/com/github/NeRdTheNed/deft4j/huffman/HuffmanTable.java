@@ -66,9 +66,6 @@ public class HuffmanTable {
             if ((i < n) && (codeLen[i] == last)) {         // Find the number of repeat occurrences
                 runLength++;
             } else {
-                lengths.add(last);                     // Write the length value
-                runLength--;
-
                 if (last == 0) {                       // Is the length zero/unused?
                     int j = 138;
 
@@ -92,6 +89,8 @@ public class HuffmanTable {
                         }
                     }
                 } else {
+                    lengths.add(last);                     // Write the length value
+                    runLength--;
                     int j = 6;
 
                     while (j >= 3) {
