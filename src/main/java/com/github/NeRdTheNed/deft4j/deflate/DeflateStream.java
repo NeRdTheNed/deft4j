@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import com.github.NeRdTheNed.deft4j.Deft;
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
@@ -176,27 +177,30 @@ public class DeflateStream {
         return size;
     }
 
-    private static DeflateBlockHuffman optimiseBlockRecodePre(DeflateBlockHuffman block, boolean ohh) {
+    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean pre, boolean ohh) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
 
         final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
+
+        if (pre) {
+            optimised.optimise();
+        }
+
         optimised.rewriteHeader(ohh);
         optimised.optimise();
         return optimised;
     }
 
-    private static DeflateBlockHuffman optimiseBlockRecodePost(DeflateBlockHuffman block, boolean ohh) {
-        if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
-            return null;
+    private static void addOptimisedRecoded(Map<DeflateBlockHuffman, String> candidates, DeflateBlockHuffman block, String name) {
+        for (final boolean pre : new boolean[] {true, false}) {
+            for (final boolean ohh : new boolean[] {true, false}) {
+                final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "");
+                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh);
+                candidates.put(opt, newName);
+            }
         }
-
-        final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
-        optimised.optimise();
-        optimised.rewriteHeader(ohh);
-        optimised.optimise();
-        return optimised;
     }
 
     private static DeflateBlock optimiseBlockNormal(DeflateBlock block) {
@@ -238,26 +242,27 @@ public class DeflateStream {
         if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
-            // Recoded pre optimisations
-            final DeflateBlockHuffman pre = optimiseBlockRecodePre(toOptimiseHuffman, false);
-            candidates.put(pre, "recoded optimised");
-            // Recoded pre optimisations ohh
-            final DeflateBlockHuffman preOhh = optimiseBlockRecodePre(toOptimiseHuffman, true);
-            candidates.put(preOhh, "recoded optimised ohh");
-            // Recoded post optimisations
-            final DeflateBlockHuffman post = optimiseBlockRecodePost(toOptimiseHuffman, false);
-            candidates.put(post, "optimised recoded");
-            // Recoded post optimisations ohh
-            final DeflateBlockHuffman postOhh = optimiseBlockRecodePost(toOptimiseHuffman, true);
-            candidates.put(postOhh, "optimised recoded ohh");
-
-            for (final DeflateBlockHuffman toFixed : new DeflateBlockHuffman[] { toOptimiseHuffman, optimisedHuffman, pre, post, preOhh, postOhh }) {
+            final Map<DeflateBlockHuffman, String> recoded = new LinkedHashMap<>();
+            addOptimisedRecoded(recoded, toOptimiseHuffman, "");
+            candidates.putAll(recoded);
+            Stream.concat(Stream.of(toOptimiseHuffman, optimisedHuffman), recoded.keySet().stream()).forEach(toFixed -> {
                 // Fixed huffman block
                 final String name = candidates.getOrDefault(toFixed, "default") + " fixed huffman";
                 final DeflateBlockHuffman fixed = toFixedHuffman(toFixed);
                 fixed.optimise();
                 candidates.put(fixed, name);
-            }
+
+                // RLE pruned header
+                final String namePrune = candidates.getOrDefault(toFixed, "default") + " pruned";
+                final DeflateBlockHuffman prune = (DeflateBlockHuffman) toFixed.copy();
+                prune.recodeHeaderToLessRLEMatches();
+                candidates.put(prune, namePrune);
+                candidates.put(optimiseBlockNormal(prune), namePrune + " optimised");
+
+                final Map<DeflateBlockHuffman, String> recodedPruned = new LinkedHashMap<>();
+                addOptimisedRecoded(recodedPruned, prune, namePrune + " ");
+                candidates.putAll(recodedPruned);
+            });
         }
 
         DeflateBlock currentSmallest = toOptimise;

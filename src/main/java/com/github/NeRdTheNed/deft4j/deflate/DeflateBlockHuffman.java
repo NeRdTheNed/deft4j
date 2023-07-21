@@ -131,8 +131,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
      * the encoded size of equivalent literal sequence.
      *
      * TODO Replace matches with submatches if smaller (e.g. if two matches are smaller than one)
+     * @param print allow debug printing
+     * @param prune remove matches if the length is the same as well
      */
-    private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, String optPrefix) {
+    private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, boolean print, String optPrefix, boolean prune) {
         long savedTotal = 0;
 
         while (true) {
@@ -158,7 +160,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         if (lit.encodedSize < 1) {
                             // No symbol for this literal
                             // TODO Add code if it saves space overall
-                            if (DEBUG_PRINT_OPT_REFREPLACE) {
+                            if (DEBUG_PRINT_OPT_REFREPLACE && print) {
                                 System.out.println(optPrefix + "Possible missed optimisation: no literal code for " + b);
                             }
 
@@ -170,8 +172,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         replace.add(lit);
                     }
 
-                    if (!skip && (totalSize < check.encodedSize)) {
-                        if (DEBUG_PRINT_OPT_REFREPLACE) {
+                    final boolean remove = prune ? (totalSize <= check.encodedSize) : (totalSize < check.encodedSize);
+
+                    if (!skip && remove) {
+                        if (DEBUG_PRINT_OPT_REFREPLACE && print) {
                             System.out.println(optPrefix + "Found size " + check.encodedSize + ", replacing with size " + totalSize);
                             System.out.println(optPrefix + "Original: " + check + "\nNew:");
 
@@ -193,12 +197,12 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 break;
             }
 
-            assert saved > 0;
+            assert ((prune && (saved >= 0)) || (saved > 0));
             savedTotal += saved;
             checkLitlens.remove(index);
             checkLitlens.addAll(index, replace);
 
-            if (DEBUG_PRINT_OPT_REFREPLACE) {
+            if (DEBUG_PRINT_OPT_REFREPLACE && print) {
                 System.out.println(optPrefix + "Did replace, saved " + saved);
             }
         }
@@ -206,18 +210,18 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return savedTotal;
     }
 
-    private void replaceBackrefsWithLiteralsIfSmaller() {
-        sizeBits -= replaceWithLiteralsIfSmaller(litlens, litlenDec, DEBUG_PRINT_OPT_REFREPLACE_STR);
+    private void replaceBackrefsWithLiteralsIfSmaller(boolean prune) {
+        sizeBits -= replaceWithLiteralsIfSmaller(litlens, litlenDec, true, DEBUG_PRINT_OPT_REFREPLACE_STR, prune);
     }
 
-    private void replaceRLERunsWithLiteralsIfSmaller() {
+    private void replaceRLERunsWithLiteralsIfSmaller(boolean prune, boolean print) {
         if (type != DeflateBlockType.DYNAMIC) {
             return;
         }
 
         long savedHeader = 0;
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, DEBUG_PRINT_OPT_RUNREPLACE_STR);
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune);
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune);
         sizeBits -= savedHeader;
         dynamicHeaderSizeBits -= savedHeader;
     }
@@ -266,9 +270,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         // TODO Remove unused codes / lengths
         // TODO Backrefs / check if sequence is in backref codebook
         final long original = sizeBits;
-        replaceBackrefsWithLiteralsIfSmaller();
+        replaceBackrefsWithLiteralsIfSmaller(false);
         removeTrailingHeaderCodes(true);
-        replaceRLERunsWithLiteralsIfSmaller();
+        replaceRLERunsWithLiteralsIfSmaller(false, true);
         return original - sizeBits;
     }
 
@@ -370,6 +374,88 @@ public class DeflateBlockHuffman extends DeflateBlock {
         if (DEBUG_PRINT_HEADER_RECODE) {
             System.out.println("New header size: " + dynamicHeaderSizeBits + "\nNew size: " + sizeBits);
         }
+    }
+
+    private void recodeHeader() {
+        if (type != DeflateBlockType.DYNAMIC) {
+            return;
+        }
+
+        sizeBits -= dynamicHeaderSizeBits;
+        dynamicHeaderSizeBits = 0;
+        final List<LitLen> rlePairsComb = Stream.concat(rlePairsLitlen.stream(), rlePairsDist.stream()).collect(Collectors.toList());
+        final List<Integer> lengths = new ArrayList<>();
+        numLitlenLens = 0;
+
+        for (final LitLen rlePair : rlePairsLitlen) {
+            lengths.add((int) rlePair.litlen);
+
+            if (rlePair.dist > 0) {
+                lengths.add((int) rlePair.dist);
+                numLitlenLens += (int) rlePair.dist;
+            } else {
+                numLitlenLens++;
+            }
+        }
+
+        numDistLens = 0;
+
+        for (final LitLen rlePair : rlePairsDist) {
+            lengths.add((int) rlePair.litlen);
+
+            if (rlePair.dist > 0) {
+                lengths.add((int) rlePair.dist);
+                numDistLens += (int) rlePair.dist;
+            } else {
+                numDistLens++;
+            }
+        }
+
+        codeLenDec = Huffman.ofRLEPacked(lengths);
+        codelenLengths = new int[Constants.MAX_CODELEN_LENS];
+        System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
+        removeDynHeaderTrailingZeroLenCodelens(false);
+        dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
+
+        for (final LitLen rlePair : rlePairsComb) {
+            rlePair.encodedSize = codeLenDec.getSymLen((int) rlePair.litlen);
+
+            if (rlePair.dist > 0) {
+                switch ((int) rlePair.litlen) {
+                case Constants.CODELEN_COPY: {
+                    // 2 bits + 3
+                    rlePair.encodedSize += 2;
+                    break;
+                }
+
+                case Constants.CODELEN_ZEROS: {
+                    // 3 bits + 3
+                    rlePair.encodedSize += 3;
+                    break;
+                }
+
+                case Constants.CODELEN_ZEROS2: {
+                    // 7 bits + 138
+                    rlePair.encodedSize += 7;
+                    break;
+                }
+
+                default:
+                    // Invalid symbol
+                    throw new RuntimeException("Invalid RLE symbol when encoding dynamic header");
+                }
+            }
+
+            dynamicHeaderSizeBits += rlePair.encodedSize;
+        }
+
+        sizeBits += dynamicHeaderSizeBits;
+    }
+
+    /** Attempts to replace RLE matches that take the same size or more than literals in the dynamic header, then re-codes the header */
+    public void recodeHeaderToLessRLEMatches() {
+        replaceRLERunsWithLiteralsIfSmaller(true, false);
+        recodeHeader();
     }
 
     public void recodeToFixedHuffman() {
