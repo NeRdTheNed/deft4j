@@ -25,6 +25,8 @@ jobs:
           arguments: build --scan --stacktrace --warning-mode all
       - name: Optimise built jar file
         run: java -ea -jar ./build/libs/deft4j-all.jar ./build/libs/deft4j-all.jar ./build/libs/deft4j-all.jar
+      - name: Optimise built jar file
+        run: java -ea -jar ./build/libs/deft4j-all.jar ./build/libs/deft4j.jar ./build/libs/deft4j.jar
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
