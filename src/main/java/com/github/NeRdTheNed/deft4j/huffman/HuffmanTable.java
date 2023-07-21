@@ -34,11 +34,13 @@ public class HuffmanTable {
      * @param litCodeLen The literal codelengths
      * @param distCodeLen The distance codelengths
      * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
+     * @param use8 Use 4 + 4 instead of 6 + single + single
+     * @param use7 Use 4 + 3 instead of 6 + single
      * @return The packed codelengths
      */
-    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh) {
+    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh, boolean use8, boolean use7) {
         final List<Integer> lengths = new ArrayList<>();
-        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh);
+        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh, use8, use7);
         return lengths;
     }
 
@@ -55,8 +57,10 @@ public class HuffmanTable {
      * @param lengths The list of length symbols
      * @param codeLen The codelengths to be packed
      * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
+     * @param use8 Use 4 + 4 instead of 6 + single + single
+     * @param use7 Use 4 + 3 instead of 6 + single
      */
-    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh) {
+    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh, boolean use8, boolean use7) {
         final int n = codeLen.length;
         // Perform a run-length encoding
         int last = codeLen[0];                         // Get the first length value
@@ -96,7 +100,7 @@ public class HuffmanTable {
                     while (j >= 3) {
                         if (ohh) {
                             // Use 4 + 4 instead of 6 + single + single
-                            if (runLength == 8) {
+                            if (use8 && (runLength == 8)) {
                                 lengths.add(16);
                                 lengths.add(FIRST_8 - 3);
                                 lengths.add(16);
@@ -106,7 +110,7 @@ public class HuffmanTable {
                             }
 
                             // Use 4 + 3 instead of 6 + single
-                            if (runLength == 7) {
+                            if (use7 && (runLength == 7)) {
                                 lengths.add(16);
                                 lengths.add(FIRST_7 - 3);
                                 lengths.add(16);

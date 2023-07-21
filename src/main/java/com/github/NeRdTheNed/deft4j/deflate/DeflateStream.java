@@ -177,7 +177,7 @@ public class DeflateStream {
         return size;
     }
 
-    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean pre, boolean ohh) {
+    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean pre, boolean ohh, boolean use8, boolean use7) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
@@ -188,7 +188,7 @@ public class DeflateStream {
             optimised.optimise();
         }
 
-        optimised.rewriteHeader(ohh);
+        optimised.rewriteHeader(ohh, use8, use7);
         optimised.optimise();
         return optimised;
     }
@@ -196,9 +196,19 @@ public class DeflateStream {
     private static void addOptimisedRecoded(Map<DeflateBlockHuffman, String> candidates, DeflateBlockHuffman block, String name) {
         for (final boolean pre : new boolean[] {true, false}) {
             for (final boolean ohh : new boolean[] {true, false}) {
-                final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "");
-                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh);
-                candidates.put(opt, newName);
+                if (ohh) {
+                    for (final boolean use8 : new boolean[] {true, false}) {
+                        for (final boolean use7 : new boolean[] {true, false}) {
+                            final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "") + (use8 ? " optimise 8" : "") + (use7 ? " optimise 7" : "");
+                            final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7);
+                            candidates.put(opt, newName);
+                        }
+                    }
+                } else {
+                    final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "");
+                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, true, true);
+                    candidates.put(opt, newName);
+                }
             }
         }
     }
