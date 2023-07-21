@@ -272,7 +272,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return original - sizeBits;
     }
 
-    public void rewriteHeader() {
+    public void rewriteHeader(boolean ohh) {
         if (type != DeflateBlockType.DYNAMIC) {
             return;
         }
@@ -283,7 +283,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         numDistLens = distDec.table.codeLen.length;
         rlePairsLitlen = new ArrayList<>();
         rlePairsDist = new ArrayList<>();
-        final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen);
+        final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh);
         codeLenDec = Huffman.ofRLEPacked(repack);
         codelenLengths = new int[Constants.MAX_CODELEN_LENS];
         System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
@@ -369,19 +369,19 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         sizeBits -= dynamicHeaderSizeBits;
         type = DeflateBlockType.FIXED;
-        recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST);
+        recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST, true);
     }
 
-    public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec) {
+    public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh) {
         if ((newLitlenDec == Huffman.FIXED_LITLEN_INST) && (newDistDec == Huffman.FIXED_DIST_INST)) {
             recodeToFixedHuffman();
         }
 
         type = DeflateBlockType.DYNAMIC;
-        recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy());
+        recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy(), ohh);
     }
 
-    private void recodeToHuffmanInternal(Huffman newLitlenDec, Huffman newDistDec) {
+    private void recodeToHuffmanInternal(Huffman newLitlenDec, Huffman newDistDec, boolean ohh) {
         litlenDec = newLitlenDec;
         distDec = newDistDec;
 
@@ -410,7 +410,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             sizeBits += litlenThis.encodedSize;
         }
 
-        rewriteHeader();
+        rewriteHeader(ohh);
     }
 
     // Debug flags

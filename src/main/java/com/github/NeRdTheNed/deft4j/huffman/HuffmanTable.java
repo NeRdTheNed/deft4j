@@ -33,11 +33,12 @@ public class HuffmanTable {
      * Pack the given codelength arrays.
      * @param litCodeLen The literal codelengths
      * @param distCodeLen The distance codelengths
+     * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
      * @return The packed codelengths
      */
-    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen) {
+    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh) {
         final List<Integer> lengths = new ArrayList<>();
-        pack(lengths, Util.combine(litCodeLen, distCodeLen));
+        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh);
         return lengths;
     }
 
@@ -46,8 +47,9 @@ public class HuffmanTable {
      * (see RFC 1951, section 3.2.7)
      * @param lengths The list of length symbols
      * @param codeLen The codelengths to be packed
+     * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
      */
-    private static void pack(List<Integer> lengths, int[] codeLen) {
+    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh) {
         final int n = codeLen.length;
         // Perform a run-length encoding
         int last = codeLen[0];                         // Get the first length value
@@ -86,6 +88,28 @@ public class HuffmanTable {
                     int j = 6;
 
                     while (j >= 3) {
+                        if (ohh) {
+                            // Use 4 + 4 instead of 6 + single + single
+                            if (runLength == 8) {
+                                lengths.add(16);
+                                lengths.add(4 - 3);
+                                lengths.add(16);
+                                lengths.add(4 - 3);
+                                runLength -= 8;
+                                break;
+                            }
+
+                            // Use 4 + 3 instead of 6 + single
+                            if (runLength == 7) {
+                                lengths.add(16);
+                                lengths.add(4 - 3);
+                                lengths.add(16);
+                                lengths.add(3 - 3);
+                                runLength -= 7;
+                                break;
+                            }
+                        }
+
                         if ((runLength - j) >= 0) {    // Encode 3 to 6 repeat lengths
                             lengths.add(16);
                             lengths.add(j - 3);

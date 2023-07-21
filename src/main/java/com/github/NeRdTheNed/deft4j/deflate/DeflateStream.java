@@ -176,25 +176,25 @@ public class DeflateStream {
         return size;
     }
 
-    private static DeflateBlockHuffman optimiseBlockRecodePre(DeflateBlockHuffman block) {
+    private static DeflateBlockHuffman optimiseBlockRecodePre(DeflateBlockHuffman block, boolean ohh) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
 
         final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
-        optimised.rewriteHeader();
+        optimised.rewriteHeader(ohh);
         optimised.optimise();
         return optimised;
     }
 
-    private static DeflateBlockHuffman optimiseBlockRecodePost(DeflateBlockHuffman block) {
+    private static DeflateBlockHuffman optimiseBlockRecodePost(DeflateBlockHuffman block, boolean ohh) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
 
         final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
         optimised.optimise();
-        optimised.rewriteHeader();
+        optimised.rewriteHeader(ohh);
         optimised.optimise();
         return optimised;
     }
@@ -253,18 +253,34 @@ public class DeflateStream {
                 System.out.println("Trying header recode pre optimisations");
             }
 
-            final DeflateBlockHuffman pre = optimiseBlockRecodePre(toOptimiseHuffman);
+            final DeflateBlockHuffman pre = optimiseBlockRecodePre(toOptimiseHuffman, false);
             candidates.put(pre, "recoded optimised");
+
+            // Recoded pre optimisations ohh
+            if (PRINT_OPT_FINER) {
+                System.out.println("Trying header recode ohh pre optimisations");
+            }
+
+            final DeflateBlockHuffman preOhh = optimiseBlockRecodePre(toOptimiseHuffman, true);
+            candidates.put(preOhh, "recoded optimised ohh");
 
             // Recoded post optimisations
             if (PRINT_OPT_FINER) {
                 System.out.println("Trying header recode post optimisations");
             }
 
-            final DeflateBlockHuffman post = optimiseBlockRecodePost(toOptimiseHuffman);
+            final DeflateBlockHuffman post = optimiseBlockRecodePost(toOptimiseHuffman, false);
             candidates.put(post, "optimised recoded");
 
-            for (final DeflateBlockHuffman toFixed : new DeflateBlockHuffman[] { toOptimiseHuffman, optimisedHuffman, pre, post }) {
+            // Recoded post optimisations ohh
+            if (PRINT_OPT_FINER) {
+                System.out.println("Trying header recode ohh post optimisations");
+            }
+
+            final DeflateBlockHuffman postOhh = optimiseBlockRecodePost(toOptimiseHuffman, true);
+            candidates.put(postOhh, "optimised recoded ohh");
+
+            for (final DeflateBlockHuffman toFixed : new DeflateBlockHuffman[] { toOptimiseHuffman, optimisedHuffman, pre, post, preOhh, postOhh }) {
                 // Fixed huffman block
                 final String name = candidates.getOrDefault(optimised, "default") + " fixed huffman";
 
