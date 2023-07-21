@@ -272,9 +272,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return original - sizeBits;
     }
 
+    private static final boolean DEBUG_PRINT_HEADER_RECODE = false;
+
     public void rewriteHeader(boolean ohh) {
         if (type != DeflateBlockType.DYNAMIC) {
             return;
+        }
+
+        if (DEBUG_PRINT_HEADER_RECODE) {
+            System.out.println("Original header size: " + dynamicHeaderSizeBits + "\nOriginal size: " + sizeBits);
         }
 
         sizeBits -= dynamicHeaderSizeBits;
@@ -360,6 +366,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
         assert !iter.hasNext();
         sizeBits += dynamicHeaderSizeBits;
         removeTrailingHeaderCodes(false);
+
+        if (DEBUG_PRINT_HEADER_RECODE) {
+            System.out.println("New header size: " + dynamicHeaderSizeBits + "\nNew size: " + sizeBits);
+        }
     }
 
     public void recodeToFixedHuffman() {
