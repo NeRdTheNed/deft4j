@@ -298,7 +298,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             final LitLen rlePair = new LitLen(sym);
             rlePair.encodedSize = codeLenDec.getSymLen(sym);
             dynamicHeaderSizeBits += rlePair.encodedSize;
-            (i > numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
+            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
                 rlePair.decodedVal = new byte[] { (byte) sym };
@@ -552,7 +552,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             final int sym = decodedSym.decoded;
             final LitLen rlePair = new LitLen(sym);
             rlePair.encodedSize = decodedSym.codeLen;
-            (i > numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
+            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
                 // A literal codeword length
