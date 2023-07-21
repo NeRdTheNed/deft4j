@@ -32,6 +32,17 @@ public abstract class DeflateBlock {
     abstract byte[] getUncompressedData();
     public abstract long getSizeBits(long alginment);
 
+    public DeflateBlockUncompressed asUncompressed() {
+        if (getDeflateBlockType() != DeflateBlockType.STORED) {
+            final DeflateBlockUncompressed newUncom = new DeflateBlockUncompressed(getPrevious());
+            newUncom.setNext(getNext());
+            newUncom.fromUncompressed(getUncompressedData());
+            return newUncom;
+        }
+
+        return (DeflateBlockUncompressed) copy();
+    }
+
     private DeflateBlock prevBlock;
     private DeflateBlock nextBlock;
 

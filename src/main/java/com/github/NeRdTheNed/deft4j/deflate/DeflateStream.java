@@ -234,6 +234,16 @@ public class DeflateStream {
         final DeflateBlock optimised = optimiseBlockNormal(toOptimise);
         candidates.put(optimised, "optimised");
 
+        if (toOptimise.getDeflateBlockType() != DeflateBlockType.STORED) {
+            // Uncompressed
+            if (PRINT_OPT_FINER) {
+                System.out.println("Trying uncompressed");
+            }
+
+            final DeflateBlockUncompressed uncompressed = toOptimise.asUncompressed();
+            candidates.put(uncompressed, "uncompressed");
+        }
+
         if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
