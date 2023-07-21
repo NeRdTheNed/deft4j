@@ -199,6 +199,10 @@ public class DeflateStream {
                 if (ohh) {
                     for (final boolean use8 : new boolean[] {true, false}) {
                         for (final boolean use7 : new boolean[] {true, false}) {
+                            if (!use8 && !use7) {
+                                continue;
+                            }
+
                             final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "") + (use8 ? " optimise 8" : "") + (use7 ? " optimise 7" : "");
                             final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7);
                             candidates.put(opt, newName);
