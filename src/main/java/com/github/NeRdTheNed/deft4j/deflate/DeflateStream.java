@@ -255,7 +255,7 @@ public class DeflateStream {
                 // Post recoded header
                 final String namePost = candidates.getOrDefault(toFixed, "default") + " post recoded";
                 final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.copy();
-                post.recodeHeaderToLessRLEMatches();
+                post.recodeHeader();
                 candidates.put(post, namePost);
                 candidates.put(optimiseBlockNormal(post), namePost + " optimised");
 
