@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -224,7 +224,7 @@ public class DeflateStream {
             System.out.println("Optimising block " + toOptimise);
         }
 
-        final Map<DeflateBlock, String> candidates = new HashMap<>();
+        final Map<DeflateBlock, String> candidates = new LinkedHashMap<>();
         // Standard
         final DeflateBlock optimised = optimiseBlockNormal(toOptimise);
         candidates.put(optimised, "optimised");
