@@ -376,7 +376,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
     }
 
-    private void recodeHeader() {
+    public void recodeHeader() {
         if (type != DeflateBlockType.DYNAMIC) {
             return;
         }

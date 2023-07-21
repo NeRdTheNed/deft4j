@@ -251,6 +251,17 @@ public class DeflateStream {
                 final DeflateBlockHuffman fixed = toFixedHuffman(toFixed);
                 fixed.optimise();
                 candidates.put(fixed, name);
+                
+                // Post recoded header
+                final String namePost = candidates.getOrDefault(toFixed, "default") + " post recodeded";
+                final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.copy();
+                post.recodeHeaderToLessRLEMatches();
+                candidates.put(post, namePost);
+                candidates.put(optimiseBlockNormal(post), namePost + " optimised");
+
+                final Map<DeflateBlockHuffman, String> recodedPost = new LinkedHashMap<>();
+                addOptimisedRecoded(recodedPost, post, namePost + " ");
+                candidates.putAll(recodedPost);
 
                 // RLE pruned header
                 final String namePrune = candidates.getOrDefault(toFixed, "default") + " pruned";
