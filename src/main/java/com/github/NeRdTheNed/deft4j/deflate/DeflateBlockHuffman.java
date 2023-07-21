@@ -369,7 +369,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         sizeBits -= dynamicHeaderSizeBits;
         type = DeflateBlockType.FIXED;
-        recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST, true);
+        recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST);
     }
 
     public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh) {
@@ -378,10 +378,11 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         type = DeflateBlockType.DYNAMIC;
-        recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy(), ohh);
+        recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy());
+        rewriteHeader(ohh);
     }
 
-    private void recodeToHuffmanInternal(Huffman newLitlenDec, Huffman newDistDec, boolean ohh) {
+    private void recodeToHuffmanInternal(Huffman newLitlenDec, Huffman newDistDec) {
         litlenDec = newLitlenDec;
         distDec = newDistDec;
 
@@ -409,8 +410,6 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
             sizeBits += litlenThis.encodedSize;
         }
-
-        rewriteHeader(ohh);
     }
 
     // Debug flags
