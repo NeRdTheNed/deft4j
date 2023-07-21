@@ -830,6 +830,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         System.arraycopy(decodedData, 0, compressedBlock.decodedData, 0, decodedData.length);
 
         if (type == DeflateBlockType.DYNAMIC) {
+            compressedBlock.dynamicHeaderSizeBits = dynamicHeaderSizeBits;
             compressedBlock.codeLenDec = codeLenDec.copy();
             compressedBlock.numLitlenLens = numLitlenLens;
             compressedBlock.numDistLens = numDistLens;
