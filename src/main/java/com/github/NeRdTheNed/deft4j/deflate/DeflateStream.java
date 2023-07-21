@@ -225,21 +225,12 @@ public class DeflateStream {
         }
 
         final Map<DeflateBlock, String> candidates = new HashMap<>();
-
         // Standard
-        if (PRINT_OPT_FINER) {
-            System.out.println("Trying standard optimisations");
-        }
-
         final DeflateBlock optimised = optimiseBlockNormal(toOptimise);
         candidates.put(optimised, "optimised");
 
         if (toOptimise.getDeflateBlockType() != DeflateBlockType.STORED) {
             // Uncompressed
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying uncompressed");
-            }
-
             final DeflateBlockUncompressed uncompressed = toOptimise.asUncompressed();
             candidates.put(uncompressed, "uncompressed");
         }
@@ -247,47 +238,22 @@ public class DeflateStream {
         if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
-
             // Recoded pre optimisations
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying header recode pre optimisations");
-            }
-
             final DeflateBlockHuffman pre = optimiseBlockRecodePre(toOptimiseHuffman, false);
             candidates.put(pre, "recoded optimised");
-
             // Recoded pre optimisations ohh
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying header recode ohh pre optimisations");
-            }
-
             final DeflateBlockHuffman preOhh = optimiseBlockRecodePre(toOptimiseHuffman, true);
             candidates.put(preOhh, "recoded optimised ohh");
-
             // Recoded post optimisations
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying header recode post optimisations");
-            }
-
             final DeflateBlockHuffman post = optimiseBlockRecodePost(toOptimiseHuffman, false);
             candidates.put(post, "optimised recoded");
-
             // Recoded post optimisations ohh
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying header recode ohh post optimisations");
-            }
-
             final DeflateBlockHuffman postOhh = optimiseBlockRecodePost(toOptimiseHuffman, true);
             candidates.put(postOhh, "optimised recoded ohh");
 
             for (final DeflateBlockHuffman toFixed : new DeflateBlockHuffman[] { toOptimiseHuffman, optimisedHuffman, pre, post, preOhh, postOhh }) {
                 // Fixed huffman block
-                final String name = candidates.getOrDefault(optimised, "default") + " fixed huffman";
-
-                if (PRINT_OPT_FINER) {
-                    System.out.println("Trying " + name);
-                }
-
+                final String name = candidates.getOrDefault(toFixed, "default") + " fixed huffman";
                 final DeflateBlockHuffman fixed = toFixedHuffman(toFixed);
                 fixed.optimise();
                 candidates.put(fixed, name);
@@ -298,6 +264,10 @@ public class DeflateStream {
         long currentSizeBits = currentSmallest.getSizeBits(position);
 
         for (final Entry<DeflateBlock, String> candidateEntry : candidates.entrySet()) {
+            if (PRINT_OPT_FINER) {
+                System.out.println("Trying " + candidateEntry.getValue());
+            }
+
             final DeflateBlock candidate = candidateEntry.getKey();
             final long newSizeBits = candidate.getSizeBits(position);
 
