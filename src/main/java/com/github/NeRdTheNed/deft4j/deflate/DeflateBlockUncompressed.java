@@ -2,14 +2,12 @@ package com.github.NeRdTheNed.deft4j.deflate;
 
 import java.io.IOException;
 
-import org.apache.commons.compress.utils.BitInputStream;
-
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 import com.github.NeRdTheNed.deft4j.util.BitInputStreamUtil;
 
 public class DeflateBlockUncompressed extends DeflateBlock {
     byte[] storedData;
-    int localAlignment;
 
     public DeflateBlockUncompressed(DeflateBlock prevBlock) {
         super(prevBlock);
@@ -22,8 +20,7 @@ public class DeflateBlockUncompressed extends DeflateBlock {
 
     @Override
     public boolean parse(BitInputStream is) throws IOException {
-        localAlignment = is.bitsCached();
-        is.alignWithByteBoundary();
+        is.readToByteAligned();
         long len, nlen;
         len  = is.readBits(16) & 0xffff;
         nlen = is.readBits(16) & 0xffff;

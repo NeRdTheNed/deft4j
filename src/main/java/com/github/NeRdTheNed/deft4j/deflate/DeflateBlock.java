@@ -3,8 +3,7 @@ package com.github.NeRdTheNed.deft4j.deflate;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.commons.compress.utils.BitInputStream;
-
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 
 public abstract class DeflateBlock {

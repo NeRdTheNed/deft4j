@@ -5,14 +5,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.compress.utils.BitInputStream;
-
 import com.github.NeRdTheNed.deft4j.Deft;
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 
 public class DeflateStream {
@@ -67,7 +65,7 @@ public class DeflateStream {
     }
 
     public boolean parse(InputStream is) throws IOException {
-        final BitInputStream bis = new BitInputStream(is, ByteOrder.LITTLE_ENDIAN);
+        final BitInputStream bis = new BitInputStream(is);
         long bits;
         boolean bfinal;
         DeflateBlock prevBlock = null;

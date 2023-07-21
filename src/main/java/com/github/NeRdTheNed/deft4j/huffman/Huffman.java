@@ -9,9 +9,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.compress.utils.BitInputStream;
-
 import com.github.NeRdTheNed.deft4j.deflate.Constants;
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
 /* Based on code by Ridge Shrubsall */

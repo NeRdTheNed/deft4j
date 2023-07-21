@@ -3,7 +3,7 @@ package com.github.NeRdTheNed.deft4j.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.apache.commons.compress.utils.BitInputStream;
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 
 public class BitInputStreamUtil {
     /** Private constructor to hide the default one */

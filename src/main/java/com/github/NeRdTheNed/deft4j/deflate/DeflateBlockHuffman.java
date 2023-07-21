@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.compress.utils.BitInputStream;
-
 import com.github.NeRdTheNed.deft4j.Deft;
 import com.github.NeRdTheNed.deft4j.huffman.Huffman;
 import com.github.NeRdTheNed.deft4j.huffman.Huffman.DecodedSym;
 import com.github.NeRdTheNed.deft4j.huffman.HuffmanTable;
+import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
