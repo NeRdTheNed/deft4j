@@ -36,11 +36,12 @@ public class HuffmanTable {
      * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
      * @param use8 Use 4 + 4 instead of 6 + single + single
      * @param use7 Use 4 + 3 instead of 6 + single
+     * @param alt8 If use8, use 5 + 3 instead of 4 + 4
      * @return The packed codelengths
      */
-    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh, boolean use8, boolean use7) {
+    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh, boolean use8, boolean use7, boolean alt8) {
         final List<Integer> lengths = new ArrayList<>();
-        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh, use8, use7);
+        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh, use8, use7, alt8);
         return lengths;
     }
 
@@ -48,19 +49,25 @@ public class HuffmanTable {
     private static final int FIRST_8 = 4;
     private static final int SECOND_8 = 4;
 
+    private static final int ALT_FIRST_8 = 5;
+    private static final int ALT_SECOND_8 = 3;
+
     private static final int FIRST_7 = 4;
     private static final int SECOND_7 = 3;
 
     /**
      * Pack an array of codelengths.
      * (see RFC 1951, section 3.2.7)
+     *
+     * TODO Options to disable use of specific RLE codes
      * @param lengths The list of length symbols
      * @param codeLen The codelengths to be packed
      * @param ohh Use combinations of RLE lengths instead of just greedy matching. Based on code by Frédéric Kayser.
      * @param use8 Use 4 + 4 instead of 6 + single + single
      * @param use7 Use 4 + 3 instead of 6 + single
+     * @param alt8 If use8, use 5 + 3 instead of 4 + 4
      */
-    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh, boolean use8, boolean use7) {
+    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh, boolean use8, boolean use7, boolean alt8) {
         final int n = codeLen.length;
         // Perform a run-length encoding
         int last = codeLen[0];                         // Get the first length value
@@ -102,9 +109,9 @@ public class HuffmanTable {
                             // Use 4 + 4 instead of 6 + single + single
                             if (use8 && (runLength == 8)) {
                                 lengths.add(16);
-                                lengths.add(FIRST_8 - 3);
+                                lengths.add((alt8 ? ALT_FIRST_8 : FIRST_8) - 3);
                                 lengths.add(16);
-                                lengths.add(SECOND_8 - 3);
+                                lengths.add((alt8 ? ALT_SECOND_8 : SECOND_8) - 3);
                                 runLength -= 8;
                                 break;
                             }
