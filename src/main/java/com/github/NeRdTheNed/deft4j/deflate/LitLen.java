@@ -50,8 +50,9 @@ public class LitLen {
         newLit.encodedSize = encodedSize;
 
         if (decodedVal != null) {
-            newLit.decodedVal = new byte[decodedVal.length];
-            System.arraycopy(decodedVal, 0, newLit.decodedVal, 0, decodedVal.length);
+            //newLit.decodedVal = new byte[decodedVal.length];
+            //System.arraycopy(decodedVal, 0, newLit.decodedVal, 0, decodedVal.length);
+            newLit.decodedVal = decodedVal;
         }
 
         return newLit;
