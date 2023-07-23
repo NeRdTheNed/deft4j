@@ -1019,8 +1019,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         compressedBlock.finishedDec = true;
         compressedBlock.dataPos = dataPos;
         compressedBlock.sizeBits = sizeBits;
-        compressedBlock.decodedData = new byte[decodedData.length];
-        System.arraycopy(decodedData, 0, compressedBlock.decodedData, 0, decodedData.length);
+        //compressedBlock.decodedData = new byte[decodedData.length];
+        //System.arraycopy(decodedData, 0, compressedBlock.decodedData, 0, decodedData.length);
+        compressedBlock.decodedData = decodedData;
 
         if (type == DeflateBlockType.DYNAMIC) {
             compressedBlock.dynamicHeaderSizeBits = dynamicHeaderSizeBits;

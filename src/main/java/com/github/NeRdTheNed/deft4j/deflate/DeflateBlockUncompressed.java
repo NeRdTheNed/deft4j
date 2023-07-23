@@ -76,8 +76,9 @@ public class DeflateBlockUncompressed extends DeflateBlock {
     public DeflateBlock copy() {
         final DeflateBlockUncompressed uncom = new DeflateBlockUncompressed(getPrevious());
         copy(this, uncom);
-        uncom.storedData = new byte[storedData.length];
-        System.arraycopy(storedData, 0, uncom.storedData, 0, storedData.length);
+        //uncom.storedData = new byte[storedData.length];
+        //System.arraycopy(storedData, 0, uncom.storedData, 0, storedData.length);
+        uncom.storedData = storedData;
         return uncom;
     }
 
