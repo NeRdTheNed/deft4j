@@ -193,27 +193,49 @@ public class DeflateStream {
         return optimised;
     }
 
-    private static void addOptimisedRecoded(Map<DeflateBlockHuffman, String> candidates, DeflateBlockHuffman block, String name) {
-        for (final boolean pre : new boolean[] {true, false}) {
-            for (final boolean ohh : new boolean[] {true, false}) {
-                if (ohh) {
-                    for (final boolean alt8 : new boolean[] {false, true}) {
-                        for (final boolean use8 : new boolean[] {true, false}) {
-                            for (final boolean use7 : new boolean[] {true, false}) {
-                                if (!use8 && (alt8 || !use7)) {
-                                    continue;
-                                }
+    private static DeflateBlockHuffman recodedHuffman(DeflateBlockHuffman block, boolean prune) {
+        final DeflateBlockHuffman recoded = (DeflateBlockHuffman) block.copy();
 
-                                final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "") + (use8 ? alt8 ? " alt optimise 8" : " optimise 8" : "") + (use7 ? " optimise 7" : "");
-                                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7, alt8);
-                                candidates.put(opt, newName);
+        if (prune) {
+            recoded.recodeHuffmanLessMatches();
+        } else {
+            recoded.recodeHuffman();
+        }
+
+        return recoded;
+    }
+
+    private static void addOptimisedRecoded(Map<DeflateBlockHuffman, String> candidates, DeflateBlockHuffman toOptimise, String baseName) {
+        final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
+        blocks.put(toOptimise, baseName);
+        blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
+        blocks.put(recodedHuffman(toOptimise, true), baseName + "huffman-recoded-pruned ");
+
+        for (final Entry<DeflateBlockHuffman, String> entry : blocks.entrySet()) {
+            final DeflateBlockHuffman block = entry.getKey();
+            final String name = entry.getValue();
+
+            for (final boolean pre : new boolean[] {true, false}) {
+                for (final boolean ohh : new boolean[] {true, false}) {
+                    if (ohh) {
+                        for (final boolean alt8 : new boolean[] {false, true}) {
+                            for (final boolean use8 : new boolean[] {true, false}) {
+                                for (final boolean use7 : new boolean[] {true, false}) {
+                                    if (!use8 && (alt8 || !use7)) {
+                                        continue;
+                                    }
+
+                                    final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
+                                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7, alt8);
+                                    candidates.put(opt, newName);
+                                }
                             }
                         }
+                    } else {
+                        final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "");
+                        final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, true, true, false);
+                        candidates.put(opt, newName);
                     }
-                } else {
-                    final String newName = name + (pre ? "recoded optimised" : "optimised recoded") + (ohh ? " ohh" : "");
-                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, true, true, false);
-                    candidates.put(opt, newName);
                 }
             }
         }
@@ -263,13 +285,13 @@ public class DeflateStream {
             candidates.putAll(recoded);
             Stream.concat(Stream.of(toOptimiseHuffman, optimisedHuffman), recoded.keySet().stream()).forEach(toFixed -> {
                 // Fixed huffman block
-                final String name = candidates.getOrDefault(toFixed, "default") + " fixed huffman";
+                final String name = candidates.getOrDefault(toFixed, "default") + " fixed-huffman";
                 final DeflateBlockHuffman fixed = toFixedHuffman(toFixed);
                 fixed.optimise();
                 candidates.put(fixed, name);
 
                 // Post recoded header
-                final String namePost = candidates.getOrDefault(toFixed, "default") + " post recoded";
+                final String namePost = candidates.getOrDefault(toFixed, "default") + " post-recoded";
                 final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.copy();
                 post.recodeHeader();
                 candidates.put(post, namePost);

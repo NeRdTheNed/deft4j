@@ -12,6 +12,7 @@ import com.github.NeRdTheNed.deft4j.Deft;
 import com.github.NeRdTheNed.deft4j.huffman.Huffman;
 import com.github.NeRdTheNed.deft4j.huffman.Huffman.DecodedSym;
 import com.github.NeRdTheNed.deft4j.huffman.HuffmanTable;
+import com.github.NeRdTheNed.deft4j.huffman.HuffmanTree;
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
@@ -210,8 +211,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return savedTotal;
     }
 
-    private void replaceBackrefsWithLiteralsIfSmaller(boolean prune) {
-        sizeBits -= replaceWithLiteralsIfSmaller(litlens, litlenDec, true, DEBUG_PRINT_OPT_REFREPLACE_STR, prune);
+    private void replaceBackrefsWithLiteralsIfSmaller(boolean prune, boolean print) {
+        sizeBits -= replaceWithLiteralsIfSmaller(litlens, litlenDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune);
     }
 
     private void replaceRLERunsWithLiteralsIfSmaller(boolean prune, boolean print) {
@@ -270,13 +271,17 @@ public class DeflateBlockHuffman extends DeflateBlock {
         // TODO Remove unused codes / lengths
         // TODO Backrefs / check if sequence is in backref codebook
         final long original = sizeBits;
-        replaceBackrefsWithLiteralsIfSmaller(false);
+        replaceBackrefsWithLiteralsIfSmaller(false, true);
         removeTrailingHeaderCodes(true);
         replaceRLERunsWithLiteralsIfSmaller(false, true);
         return original - sizeBits;
     }
 
     private static final boolean DEBUG_PRINT_HEADER_RECODE = false;
+
+    public void rewriteHeader() {
+        rewriteHeader(true, true, true, false);
+    }
 
     public void rewriteHeader(boolean ohh, boolean use8, boolean use7, boolean alt8) {
         if (type != DeflateBlockType.DYNAMIC) {
@@ -465,17 +470,110 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         sizeBits -= dynamicHeaderSizeBits;
         type = DeflateBlockType.FIXED;
+        dynamicHeaderSizeBits = 0;
+        codeLenDec = null;
+        numLitlenLens = 0;
+        numDistLens = 0;
+        numCodelenLens = 0;
+        codelenLengths = null;
+        rlePairsLitlen = null;
+        rlePairsDist = null;
         recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST);
+    }
+
+    public void recodeHuffmanLessMatches() {
+        replaceBackrefsWithLiteralsIfSmaller(true, false);
+        recodeHuffman();
+    }
+
+    /**
+     * This can legally be 0 according to the deflate spec,
+     * but some decoders need larger values.
+     * Set this to 0 for the smallest possible output.
+     * Set this to 1 to work around a bug with Zlib 1.2.1 and older.
+     * Set this to 2 to work around other buggy decoders.
+     */
+    private static final int MIN_DIST_CODES = 2;
+    private static final int MIN_LIT_CODES = 0;
+
+    public void recodeHuffman() {
+        final int[] litFreqTemp = new int[Constants.MAX_LITLEN_LENS - 2];
+        final int[] distFreqTemp = new int[Constants.MAX_DIST_LENS - 2];
+
+        for (final LitLen litlenThis : litlens) {
+            if (litlenThis.dist > 0) {
+                litFreqTemp[Constants.len2litlen[(int) litlenThis.litlen]]++;
+                distFreqTemp[Constants.distance2dist(litlenThis.dist)]++;
+            } else {
+                litFreqTemp[(int) litlenThis.litlen]++;
+            }
+        }
+
+        int lastNonZeroLit = litFreqTemp.length;
+
+        while ((lastNonZeroLit > 0) && (litFreqTemp[lastNonZeroLit - 1] == 0)) {
+            lastNonZeroLit--;
+        }
+
+        int realLastNonZeroLit = lastNonZeroLit;
+
+        if (lastNonZeroLit < MIN_LIT_CODES) {
+            lastNonZeroLit = MIN_LIT_CODES;
+        }
+
+        int lastNonZeroDist = distFreqTemp.length;
+
+        while ((lastNonZeroDist > 0) && (distFreqTemp[lastNonZeroDist - 1] == 0)) {
+            lastNonZeroDist--;
+        }
+
+        int realLastNonZeroDist = lastNonZeroDist;
+
+        if (lastNonZeroDist < MIN_DIST_CODES) {
+            lastNonZeroDist = MIN_DIST_CODES;
+        }
+
+        final int[] litFreq = Arrays.copyOf(litFreqTemp, lastNonZeroLit);
+        final int[] distFreq = Arrays.copyOf(distFreqTemp, lastNonZeroDist);
+        int i = 0;
+
+        while (realLastNonZeroLit < MIN_LIT_CODES) {
+            if (litFreq[i] == 0) {
+                litFreq[i] = 1;
+                realLastNonZeroLit++;
+            }
+
+            i++;
+        }
+
+        i = 0;
+
+        while (realLastNonZeroDist < MIN_DIST_CODES) {
+            if (distFreq[i] == 0) {
+                distFreq[i] = 1;
+                realLastNonZeroDist++;
+            }
+
+            i++;
+        }
+
+        final Huffman newLit = new Huffman(new HuffmanTree(litFreq, 15).getTable());
+        final Huffman newDist = new Huffman(new HuffmanTree(distFreq, 15).getTable());
+        recodeToHuffman(newLit, newDist);
+    }
+
+    public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec) {
+        recodeToHuffman(newLitlenDec, newDistDec, true, true, true, false);
     }
 
     public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh, boolean use8, boolean use7, boolean alt8) {
         if ((newLitlenDec == Huffman.FIXED_LITLEN_INST) && (newDistDec == Huffman.FIXED_DIST_INST)) {
             recodeToFixedHuffman();
+        } else {
+            type = DeflateBlockType.DYNAMIC;
+            recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy());
+            rewriteHeader(ohh, use8, use7, alt8);
         }
-
-        type = DeflateBlockType.DYNAMIC;
-        recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy());
-        rewriteHeader(ohh, use8, use7, alt8);
     }
 
     private void recodeToHuffmanInternal(Huffman newLitlenDec, Huffman newDistDec) {
