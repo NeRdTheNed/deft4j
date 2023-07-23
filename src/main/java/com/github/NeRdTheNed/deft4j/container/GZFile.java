@@ -154,8 +154,27 @@ public class GZFile implements DeflateFilesContainer {
         return filename;
     }
 
-    private void setFilename(String filename) {
+    public void setFilename(String filename) {
         this.filename = filename;
+        final boolean alreadyHasName = (flags & FNAME) != 0;
+
+        if ((filename != null) && !filename.isEmpty()) {
+            if (!alreadyHasName) {
+                flags |= FNAME;
+            }
+        } else if (alreadyHasName) {
+            flags &= ~FNAME;
+        }
+    }
+
+    public void setData(DeflateStream stream) throws IOException {
+        deflateStream = stream;
+        compressionMethod = 8;
+        final byte[] uncompressedData = deflateStream.getUncompressedData();
+        crc32Calc.reset();
+        crc32Calc.update(uncompressedData);
+        crc32 = crc32Calc.getValue();
+        isize = uncompressedData.length;
     }
 
     @Override

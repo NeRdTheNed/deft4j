@@ -27,6 +27,20 @@ public class ZipFile implements DeflateFilesContainer {
     private Map<LocalFileHeader, DeflateStream> deflateStreamMap;
     private ZipArchive archive;
 
+    public List<GZFile> asGZipFiles() throws IOException {
+        final List<GZFile> converted = new ArrayList<>();
+
+        for (final Entry<LocalFileHeader, DeflateStream> entry : deflateStreamMap.entrySet()) {
+            final GZFile gz = new GZFile();
+            final LocalFileHeader header = entry.getKey();
+            gz.setData(entry.getValue());
+            gz.setFilename(header.getFileNameAsString());
+            converted.add(gz);
+        }
+
+        return converted;
+    }
+
     private void syncStreams() throws IOException {
         for (final Entry<LocalFileHeader, DeflateStream> entry : deflateStreamMap.entrySet()) {
             final LocalFileHeader file = entry.getKey();
