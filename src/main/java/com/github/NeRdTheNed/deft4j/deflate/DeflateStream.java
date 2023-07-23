@@ -330,6 +330,10 @@ public class DeflateStream {
                     System.out.println("Candidate " + candidateEntry.getValue() + " saved " + (currentSizeBits - newSizeBits) + " bits");
                 }
 
+                if (currentSmallest != toOptimise) {
+                    currentSmallest.discard();
+                }
+
                 currentSmallest = candidate;
                 currentSizeBits = newSizeBits;
             }

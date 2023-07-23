@@ -31,6 +31,19 @@ public abstract class DeflateBlock {
     abstract boolean write(BitOutputStream os, boolean finalBlock) throws IOException;
     abstract byte[] getUncompressedData();
     public abstract long getSizeBits(long alginment);
+    public void discard() {
+        final DeflateBlock prev = getPrevious();
+
+        if ((prev != null) && (prev.getNext() == this)) {
+            prev.setNext(null);
+        }
+
+        final DeflateBlock next = getNext();
+
+        if ((next != null) && (next.getPrevious() == this)) {
+            next.setPrevious(null);
+        }
+    }
 
     public DeflateBlockUncompressed asUncompressed() {
         if (getDeflateBlockType() != DeflateBlockType.STORED) {

@@ -82,4 +82,10 @@ public class DeflateBlockUncompressed extends DeflateBlock {
         return uncom;
     }
 
+    @Override
+    public void discard() {
+        super.discard();
+        storedData = null;
+    }
+
 }

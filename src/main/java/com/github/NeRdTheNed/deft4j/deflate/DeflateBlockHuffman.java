@@ -24,7 +24,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private Huffman distDec;
 
     // TODO LinkedList?
-    private final List<LitLen> litlens = new ArrayList<>();
+    private List<LitLen> litlens = new ArrayList<>();
     // Decoded data
     private boolean finishedDec = false;
     private byte[] decodedData;
@@ -1044,5 +1044,45 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         return compressedBlock;
+    }
+
+    @Override
+    public void discard() {
+        super.discard();
+        litlenDec = null;
+        distDec = null;
+        decodedData = null;
+        codeLenDec = null;
+        codelenLengths = null;
+
+        if (litlens != null) {
+            try {
+                litlens.clear();
+            } catch (final Exception e) {
+                // Ignored
+            }
+        }
+
+        litlens = null;
+
+        if (rlePairsLitlen != null) {
+            try {
+                rlePairsLitlen.clear();
+            } catch (final Exception e) {
+                // Ignored
+            }
+        }
+
+        rlePairsLitlen = null;
+
+        if (rlePairsDist != null) {
+            try {
+                rlePairsDist.clear();
+            } catch (final Exception e) {
+                // Ignored
+            }
+        }
+
+        rlePairsDist = null;
     }
 }
