@@ -367,7 +367,7 @@ public class DeflateStream {
                 }
 
                 pos += currentBlock.getSizeBits(pos);
-            } else {
+            } else if (!first || (currentBlock.getNext() != null)) {
                 final long currentSaved = currentBlock.getSizeBits(pos + 3) + 3;
 
                 if (PRINT_OPT_FINE) {
@@ -380,6 +380,9 @@ public class DeflateStream {
                 if (first) {
                     setFirstBlock(currentBlock.getNext());
                 }
+            } else {
+                // Only one block, and it's empty, but it's technically still a deflate stream.
+                pos += currentBlock.getSizeBits(pos);
             }
 
             block++;
