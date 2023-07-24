@@ -218,7 +218,8 @@ public class Deft {
         NONE,
         CHEAP,
         ZOPFLI,
-        ZOPFLI_EXTENSIVE
+        ZOPFLI_EXTENSIVE,
+        ZOPFLI_VERY_EXTENSIVE
     }
 
     // Debug flags
@@ -242,7 +243,7 @@ public class Deft {
         recompress = recompressMode.ordinal() > RecompressMode.NONE.ordinal();
         final boolean zopfli = recompressMode.ordinal() >= RecompressMode.ZOPFLI.ordinal();
         final Strategy strat = recompressMode.ordinal() >= RecompressMode.ZOPFLI_EXTENSIVE.ordinal() ? Strategy.EXTENSIVE : Strategy.MULTI_CHEAP;
-        compUtil = !recompress ? null : new CompressionUtil(true, true, false, zopfli, strat);
+        compUtil = !recompress ? null : new CompressionUtil(true, true, recompressMode.ordinal() >= RecompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, strat);
     }
 
     /** Read from the given input stream into the container, optimise, and write to the output stream */
