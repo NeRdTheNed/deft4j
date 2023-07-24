@@ -334,22 +334,27 @@ public class DeflateStream {
 
     public long optimise() {
         int block = 0;
+        int pass = 0;
         long pos = 0;
         long saved = 0;
         boolean first = true;
         DeflateBlock currentBlock = getFirstBlock();
 
         while (currentBlock != null) {
+            boolean finishPass = true;
+
             if (currentBlock.getUncompressedData().length > 0) {
                 pos += 3;
                 final DeflateBlock optimisedBlock = optimiseBlock(currentBlock, pos);
                 final long currentSaved = currentBlock.getSizeBits(pos) - optimisedBlock.getSizeBits(pos);
 
                 if ((optimisedBlock != currentBlock) && (currentSaved > 0)) {
+                    finishPass = false;
+                    pass++;
                     saved += currentSaved;
 
                     if (PRINT_OPT_FINE) {
-                        System.out.println("Saved " + currentSaved + " bits in block " + block);
+                        System.out.println("Pass " + pass + " saved " + currentSaved + " bits in block " + block);
                     }
 
                     currentBlock.replace(optimisedBlock);
@@ -381,9 +386,12 @@ public class DeflateStream {
                 pos += currentBlock.getSizeBits(pos);
             }
 
-            block++;
-            currentBlock = currentBlock.getNext();
-            first = false;
+            if (finishPass) {
+                block++;
+                currentBlock = currentBlock.getNext();
+                first = false;
+                pass = 0;
+            }
         }
 
         // TODO Try other types of blocks
