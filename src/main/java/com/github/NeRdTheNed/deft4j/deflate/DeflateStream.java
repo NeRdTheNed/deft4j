@@ -324,7 +324,7 @@ public class DeflateStream {
             };
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
-            runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, ""));
+            runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
             runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "");
         }
