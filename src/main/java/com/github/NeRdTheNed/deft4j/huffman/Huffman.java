@@ -16,11 +16,12 @@ import com.github.NeRdTheNed.deft4j.util.Util;
 /* Based on code by Ridge Shrubsall */
 public class Huffman {
     public Huffman copy() {
-        if ((this == FIXED_LITLEN_INST) || (this == FIXED_DIST_INST)) {
+        /*if ((this == FIXED_LITLEN_INST) || (this == FIXED_DIST_INST)) {
             return this;
         }
 
-        return Huffman.ofCodelens(table.codeLen);
+        return Huffman.ofCodelens(table.codeLen);*/
+        return this;
     }
 
     public static final Huffman FIXED_LITLEN_INST = ofFixedLitlen();

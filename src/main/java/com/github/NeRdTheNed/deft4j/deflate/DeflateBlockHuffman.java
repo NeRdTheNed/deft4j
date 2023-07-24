@@ -300,8 +300,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         rlePairsDist = new ArrayList<>();
         final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh, use8, use7, alt8);
         codeLenDec = Huffman.ofRLEPacked(repack);
-        codelenLengths = new int[Constants.MAX_CODELEN_LENS];
-        System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
+        //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
+        //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
+        codelenLengths = codeLenDec.table.codeLen;
         numCodelenLens = Constants.MAX_CODELEN_LENS;
         dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
         int i = 0;
@@ -417,8 +418,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         codeLenDec = Huffman.ofRLEPacked(lengths);
-        codelenLengths = new int[Constants.MAX_CODELEN_LENS];
-        System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
+        //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
+        //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
+        codelenLengths = codeLenDec.table.codeLen;
         removeDynHeaderTrailingZeroLenCodelens(false);
         dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
 
@@ -734,6 +736,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
         codeLenDec = Huffman.ofCodelens(codelenLengths);
+        // TODO temporary attempt at reducing memory use
+        codelenLengths = codeLenDec.table.codeLen;
         final int[] codeLengths = new int[Constants.MAX_LITLEN_LENS + Constants.MAX_DIST_LENS];
         rlePairsLitlen = new ArrayList<>();
         rlePairsDist = new ArrayList<>();
@@ -1029,8 +1033,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
             compressedBlock.numLitlenLens = numLitlenLens;
             compressedBlock.numDistLens = numDistLens;
             compressedBlock.numCodelenLens = numCodelenLens;
-            compressedBlock.codelenLengths = new int[codelenLengths.length];
-            System.arraycopy(codelenLengths, 0, compressedBlock.codelenLengths, 0, codelenLengths.length);
+            //compressedBlock.codelenLengths = new int[codelenLengths.length];
+            //System.arraycopy(codelenLengths, 0, compressedBlock.codelenLengths, 0, codelenLengths.length);
+            compressedBlock.codelenLengths = codelenLengths;
             compressedBlock.rlePairsLitlen = new ArrayList<>();
             compressedBlock.rlePairsDist = new ArrayList<>();
 
