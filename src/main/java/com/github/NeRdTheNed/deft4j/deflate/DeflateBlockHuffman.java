@@ -1054,35 +1054,29 @@ public class DeflateBlockHuffman extends DeflateBlock {
         decodedData = null;
         codeLenDec = null;
         codelenLengths = null;
-
-        if (litlens != null) {
+        /*if (litlens != null) {
             try {
                 litlens.clear();
             } catch (final Exception e) {
                 // Ignored
             }
-        }
-
+        }*/
         litlens = null;
-
-        if (rlePairsLitlen != null) {
+        /*if (rlePairsLitlen != null) {
             try {
                 rlePairsLitlen.clear();
             } catch (final Exception e) {
                 // Ignored
             }
-        }
-
+        }*/
         rlePairsLitlen = null;
-
-        if (rlePairsDist != null) {
+        /*if (rlePairsDist != null) {
             try {
                 rlePairsDist.clear();
             } catch (final Exception e) {
                 // Ignored
             }
-        }
-
+        }*/
         rlePairsDist = null;
     }
 }
