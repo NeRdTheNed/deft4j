@@ -134,6 +134,8 @@ public abstract class DeflateBlock {
         if (nextBlock != null) {
             nextBlock.setPrevious(prevBlock);
         }
+
+        discard();
     }
 
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */

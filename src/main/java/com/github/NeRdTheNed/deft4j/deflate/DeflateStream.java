@@ -8,11 +8,12 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import com.github.NeRdTheNed.deft4j.Deft;
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
+import com.github.NeRdTheNed.deft4j.util.Pair;
 
 public class DeflateStream {
     private static final String DEFAULT_NAME = "unnamed stream";
@@ -205,7 +206,7 @@ public class DeflateStream {
         return recoded;
     }
 
-    private static void addOptimisedRecoded(Map<DeflateBlockHuffman, String> candidates, DeflateBlockHuffman toOptimise, String baseName) {
+    private static void addOptimisedRecoded(Consumer<Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(toOptimise, baseName);
         blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
@@ -227,14 +228,14 @@ public class DeflateStream {
 
                                     final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
                                     final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7, alt8);
-                                    candidates.put(opt, newName);
+                                    callback.accept(new Pair<>(opt, newName));
                                 }
                             }
                         }
                     } else {
                         final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "");
                         final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, true, true, false);
-                        candidates.put(opt, newName);
+                        callback.accept(new Pair<>(opt, newName));
                     }
                 }
             }
@@ -266,80 +267,69 @@ public class DeflateStream {
             System.out.println("Optimising block " + toOptimise);
         }
 
-        final Map<DeflateBlock, String> candidates = new LinkedHashMap<>();
+        final Pair<DeflateBlock, Long> currentSmallestPair = new Pair<>(toOptimise, toOptimise.getSizeBits(position));
+        final Consumer<Pair<? extends DeflateBlock, String>> callback = e -> {
+            if (PRINT_OPT_FINER) {
+                System.out.println("Trying " + e.v);
+            }
+
+            final DeflateBlock candidate = e.k;
+            final long newSizeBits = candidate.getSizeBits(position);
+
+            if (newSizeBits < currentSmallestPair.v) {
+                if (PRINT_OPT_FINE) {
+                    System.out.println("Candidate " + e.v + " saved " + (currentSmallestPair.v - newSizeBits) + " bits");
+                }
+
+                if (currentSmallestPair.k != toOptimise) {
+                    //currentSmallestPair.k.discard();
+                }
+
+                currentSmallestPair.k = candidate;
+                currentSmallestPair.v = newSizeBits;
+            }
+        };
         // Standard
         final DeflateBlock optimised = optimiseBlockNormal(toOptimise);
-        candidates.put(optimised, "optimised");
+        callback.accept(new Pair<>(optimised, "optimised"));
 
         if (toOptimise.getDeflateBlockType() != DeflateBlockType.STORED) {
             // Uncompressed
-            final DeflateBlockUncompressed uncompressed = toOptimise.asUncompressed();
-            candidates.put(uncompressed, "uncompressed");
+            callback.accept(new Pair<>(toOptimise.asUncompressed(), "uncompressed"));
         }
 
         if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
-            final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
-            final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
-            final Map<DeflateBlockHuffman, String> recoded = new LinkedHashMap<>();
-            addOptimisedRecoded(recoded, toOptimiseHuffman, "");
-            candidates.putAll(recoded);
-            Stream.concat(Stream.of(toOptimiseHuffman, optimisedHuffman), recoded.keySet().stream()).forEach(toFixed -> {
+            final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallback = toFixed -> {
                 // Fixed huffman block
-                final String name = candidates.getOrDefault(toFixed, "default") + " fixed-huffman";
-                final DeflateBlockHuffman fixed = toFixedHuffman(toFixed);
+                final String name = toFixed.v + " fixed-huffman";
+                final DeflateBlockHuffman fixed = toFixedHuffman(toFixed.k);
                 fixed.optimise();
-                candidates.put(fixed, name);
+                callback.accept(new Pair<>(fixed, name));
 
                 // Post recoded header
-                final String namePost = candidates.getOrDefault(toFixed, "default") + " post-recoded";
-                final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.copy();
+                final String namePost = toFixed.v + " post-recoded";
+                final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.k.copy();
                 post.recodeHeader();
-                candidates.put(post, namePost);
-                candidates.put(optimiseBlockNormal(post), namePost + " optimised");
-
-                final Map<DeflateBlockHuffman, String> recodedPost = new LinkedHashMap<>();
-                addOptimisedRecoded(recodedPost, post, namePost + " ");
-                candidates.putAll(recodedPost);
+                callback.accept(new Pair<>(post, namePost));
+                callback.accept(new Pair<>(optimiseBlockNormal(post), namePost + " optimised"));
+                addOptimisedRecoded(callback::accept, post, namePost + " ");
 
                 // RLE pruned header
-                final String namePrune = candidates.getOrDefault(toFixed, "default") + " pruned";
-                final DeflateBlockHuffman prune = (DeflateBlockHuffman) toFixed.copy();
+                final String namePrune = toFixed.v + " pruned";
+                final DeflateBlockHuffman prune = (DeflateBlockHuffman) toFixed.k.copy();
                 prune.recodeHeaderToLessRLEMatches();
-                candidates.put(prune, namePrune);
-                candidates.put(optimiseBlockNormal(prune), namePrune + " optimised");
-
-                final Map<DeflateBlockHuffman, String> recodedPruned = new LinkedHashMap<>();
-                addOptimisedRecoded(recodedPruned, prune, namePrune + " ");
-                candidates.putAll(recodedPruned);
-            });
+                callback.accept(new Pair<>(prune, namePrune));
+                callback.accept(new Pair<>(optimiseBlockNormal(prune), namePrune + " optimised"));
+                addOptimisedRecoded(callback::accept, prune, namePrune + " ");
+            };
+            final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
+            final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
+            runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, ""));
+            runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
+            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "");
         }
 
-        DeflateBlock currentSmallest = toOptimise;
-        long currentSizeBits = currentSmallest.getSizeBits(position);
-
-        for (final Entry<DeflateBlock, String> candidateEntry : candidates.entrySet()) {
-            if (PRINT_OPT_FINER) {
-                System.out.println("Trying " + candidateEntry.getValue());
-            }
-
-            final DeflateBlock candidate = candidateEntry.getKey();
-            final long newSizeBits = candidate.getSizeBits(position);
-
-            if (newSizeBits < currentSizeBits) {
-                if (PRINT_OPT_FINE) {
-                    System.out.println("Candidate " + candidateEntry.getValue() + " saved " + (currentSizeBits - newSizeBits) + " bits");
-                }
-
-                if (currentSmallest != toOptimise) {
-                    currentSmallest.discard();
-                }
-
-                currentSmallest = candidate;
-                currentSizeBits = newSizeBits;
-            }
-        }
-
-        return currentSmallest;
+        return currentSmallestPair.k;
     }
 
     public long optimise() {
@@ -363,6 +353,7 @@ public class DeflateStream {
                     }
 
                     currentBlock.replace(optimisedBlock);
+                    currentBlock.discard();
                     currentBlock = optimisedBlock;
 
                     if (first) {
@@ -379,11 +370,12 @@ public class DeflateStream {
                 }
 
                 saved += currentSaved;
-                currentBlock.remove();
 
                 if (first) {
                     setFirstBlock(currentBlock.getNext());
                 }
+
+                currentBlock.remove();
             } else {
                 // Only one block, and it's empty, but it's technically still a deflate stream.
                 pos += currentBlock.getSizeBits(pos);
