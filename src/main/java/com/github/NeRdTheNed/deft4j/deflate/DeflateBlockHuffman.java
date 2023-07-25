@@ -101,8 +101,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         assert !finishedDec;
         finishedDec = true;
         // Resize array to decoded data size
-        final byte[] finalArray = new byte[(int) dataPos];
-        System.arraycopy(decodedData, 0, finalArray, 0, (int) dataPos);
+        final byte[] finalArray = Arrays.copyOf(decodedData, (int) dataPos);
         decodedData = finalArray;
     }
 

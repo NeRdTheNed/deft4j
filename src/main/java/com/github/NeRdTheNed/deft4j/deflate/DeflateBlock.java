@@ -43,6 +43,9 @@ public abstract class DeflateBlock {
         if ((next != null) && (next.getPrevious() == this)) {
             next.setPrevious(null);
         }
+
+        setNext(null);
+        setPrevious(null);
     }
 
     public DeflateBlockUncompressed asUncompressed() {
