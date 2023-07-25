@@ -894,12 +894,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
             os.writeNBits(codelenLength, 3);
         }
 
+        int i = 0;
+
         // Encoded dynamic code lengths
         for (final LitLen rlePair : Stream.concat(rlePairsLitlen.stream(), rlePairsDist.stream()).collect(Collectors.toList())) {
             final long sym = rlePair.litlen;
             os.writeNBits(codeLenDec.getSym((int) sym), codeLenDec.getSymLen((int) sym));
 
             if (rlePair.dist == 0) {
+                i++;
                 assert sym <= Constants.CODELEN_MAX_LIT;
             } else {
                 final int writeDistOffset;
@@ -938,9 +941,11 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 }
 
                 os.writeNBits(rlePair.dist - writeDistOffset, writeDistSize);
+                i += rlePair.dist;
             }
         }
 
+        assert(i == (numLitlenLens + numDistLens));
         return true;
     }
 
