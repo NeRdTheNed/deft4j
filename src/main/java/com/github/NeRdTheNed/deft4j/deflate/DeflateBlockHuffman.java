@@ -3,8 +3,10 @@ package com.github.NeRdTheNed.deft4j.deflate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -391,31 +393,35 @@ public class DeflateBlockHuffman extends DeflateBlock {
         final List<LitLen> rlePairsComb = Stream.concat(rlePairsLitlen.stream(), rlePairsDist.stream()).collect(Collectors.toList());
         final List<Integer> lengths = new ArrayList<>();
         numLitlenLens = 0;
-
-        for (final LitLen rlePair : rlePairsLitlen) {
-            lengths.add((int) rlePair.litlen);
-
-            if (rlePair.dist > 0) {
-                lengths.add((int) rlePair.dist);
-                numLitlenLens += (int) rlePair.dist;
-            } else {
-                numLitlenLens++;
-            }
-        }
-
         numDistLens = 0;
+        final Set<Integer> uniqueLit = new HashSet<>();
+        final Set<Integer> uniqueDist = new HashSet<>();
 
-        for (final LitLen rlePair : rlePairsDist) {
+        for (final LitLen litlenThis : litlens) {
+            if (litlenThis.dist != 0) {
+                uniqueLit.add(Constants.len2litlen[(int) litlenThis.litlen]);
+                uniqueDist.add(Constants.distance2dist(litlenThis.dist));
+            } else {
+                uniqueLit.add((int) litlenThis.litlen);
+            }
+        }
+
+        numLitlenLens = uniqueLit.size();
+        numDistLens = uniqueDist.size() + 1;
+        int rleTotal = 0;
+
+        for (final LitLen rlePair : rlePairsComb) {
             lengths.add((int) rlePair.litlen);
 
             if (rlePair.dist > 0) {
                 lengths.add((int) rlePair.dist);
-                numDistLens += (int) rlePair.dist;
+                rleTotal += (int) rlePair.dist;
             } else {
-                numDistLens++;
+                rleTotal++;
             }
         }
 
+        assert((numLitlenLens + numDistLens) <= rleTotal);
         codeLenDec = Huffman.ofRLEPacked(lengths);
         //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
         //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
