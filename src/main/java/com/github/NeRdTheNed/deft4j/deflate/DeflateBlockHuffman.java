@@ -406,8 +406,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
         }
 
-        numLitlenLens = uniqueLit.size();
-        numDistLens = uniqueDist.size() + 1;
+        numLitlenLens = Math.max(uniqueLit.size(), Constants.MIN_LITLEN_LENS);
+        numDistLens = Math.max(uniqueDist.size(), Constants.MIN_DIST_LENS);
         int rleTotal = 0;
 
         for (final LitLen rlePair : rlePairsComb) {
