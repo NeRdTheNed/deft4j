@@ -73,7 +73,7 @@ public class BitInputStream implements Closeable {
                 return -1;
             }
 
-            read |= (thisRead << readAmount);
+            read |= thisRead << readAmount;
             readAmount += thisReadAmount;
             count -= thisReadAmount;
         }

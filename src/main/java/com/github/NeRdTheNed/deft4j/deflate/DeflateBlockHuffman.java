@@ -172,7 +172,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         replace.add(lit);
                     }
 
-                    final boolean remove = prune ? (totalSize <= check.encodedSize) : (totalSize < check.encodedSize);
+                    final boolean remove = prune ? totalSize <= check.encodedSize : totalSize < check.encodedSize;
 
                     if (!skip && remove) {
                         if (DEBUG_PRINT_OPT_REFREPLACE && print) {
@@ -197,7 +197,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 break;
             }
 
-            assert ((prune && (saved >= 0)) || (saved > 0));
+            assert (prune && (saved >= 0)) || (saved > 0);
             savedTotal += saved;
             checkLitlens.remove(index);
             checkLitlens.addAll(index, replace);
@@ -419,7 +419,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
         }
 
-        assert((numLitlenLens + numDistLens) <= rleTotal);
+        assert (numLitlenLens + numDistLens) == rleTotal;
         codeLenDec = Huffman.ofRLEPacked(lengths);
         //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
         //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
@@ -943,7 +943,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
         }
 
-        assert(i == (numLitlenLens + numDistLens));
+        assert i == (numLitlenLens + numDistLens);
         return true;
     }
 
