@@ -36,6 +36,7 @@ public class CompressionUtil {
     private final Compressor[] compressors;
 
     private final boolean useDeft;
+    private final boolean compareDeft;
 
     /** Construct the list of compressors for the given settings */
     private static Compressor[] getCompressors(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit) {
@@ -70,17 +71,18 @@ public class CompressionUtil {
         return compressorsList.toArray(new Compressor[0]);
     }
 
-    public CompressionUtil(Compressor[] compressors, boolean useDeft) {
+    public CompressionUtil(Compressor[] compressors, boolean useDeft, boolean compareDeft) {
         this.compressors = compressors;
         this.useDeft = useDeft;
+        this.compareDeft = compareDeft;
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft) {
-        this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft);
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
+        this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft, compareDeft);
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, Strategy mode, boolean useDeft) {
-        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, JZOPFLI_DEFAULT_SPLIT, useDeft);
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, Strategy mode, boolean useDeft, boolean compareDeft) {
+        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, JZOPFLI_DEFAULT_SPLIT, useDeft, compareDeft);
     }
 
     private Supplier<ExecutorService> execService = () -> {
@@ -112,12 +114,15 @@ public class CompressionUtil {
                         currentResult = Deft.optimiseDeflateStream(currentResult);
                     }
 
-                    if ((compressedData == null) || (Deft.getSizeBitsFallback(currentResult) < currentSizeBits)) {
+                    if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
                         compressedData = currentResult;
-                        currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+
+                        if (compareDeft) {
+                            currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                        }
 
                         if (PRINT_OPT_FINE) {
-                            System.out.println("Found new best, size " + currentSizeBits);
+                            System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
                         }
                     }
                 } catch (final Exception e) {
@@ -139,12 +144,15 @@ public class CompressionUtil {
                         currentResult = Deft.optimiseDeflateStream(currentResult);
                     }
 
-                    if ((compressedData == null) || (Deft.getSizeBitsFallback(currentResult) < currentSizeBits)) {
+                    if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
                         compressedData = currentResult;
-                        currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+
+                        if (compareDeft) {
+                            currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                        }
 
                         if (PRINT_OPT_FINE) {
-                            System.out.println("Found new best, size " + currentSizeBits);
+                            System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
                         }
                     }
                 } catch (final Exception e) {
