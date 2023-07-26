@@ -24,7 +24,7 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           arguments: build --scan --stacktrace --warning-mode all
       - name: Optimise built jar file
-        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=CHEAP ./deft4j-cmd/build/libs/deft4j-cmd-all.jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
+        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./deft4j-cmd/build/libs/deft4j-cmd-all.jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
       - name: Optimise built jar file
         run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=CHEAP ./deft4j-cmd/build/libs/deft4j-cmd.jar ./deft4j-cmd/build/libs/deft4j-cmd.jar
       - name: Upload artifacts
