@@ -3,10 +3,8 @@ package com.github.NeRdTheNed.deft4j.deflate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -392,7 +390,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         dynamicHeaderSizeBits = 0;
         final List<LitLen> rlePairsComb = Stream.concat(rlePairsLitlen.stream(), rlePairsDist.stream()).collect(Collectors.toList());
         final List<Integer> lengths = new ArrayList<>();
-        numLitlenLens = 0;
+        /*numLitlenLens = 0;
         numDistLens = 0;
         final Set<Integer> uniqueLit = new HashSet<>();
         final Set<Integer> uniqueDist = new HashSet<>();
@@ -407,7 +405,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         numLitlenLens = Math.max(uniqueLit.size(), Constants.MIN_LITLEN_LENS);
-        numDistLens = Math.max(uniqueDist.size(), Constants.MIN_DIST_LENS);
+        numDistLens = Math.max(uniqueDist.size(), Constants.MIN_DIST_LENS);*/
         int rleTotal = 0;
 
         for (final LitLen rlePair : rlePairsComb) {
