@@ -31,9 +31,9 @@ jobs:
           cache-disabled: true
           arguments: build --scan --stacktrace --warning-mode all
       - name: Optimise built jar file
-        run: java -ea -jar ./build/libs/deft4j-all.jar --mode=ZOPFLI_EXTENSIVE ./build/libs/deft4j-all.jar ./build/libs/deft4j-all.jar
+        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=ZOPFLI_EXTENSIVE ./deft4j-cmd/build/libs/deft4j-cmd-all.jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
       - name: Optimise built jar file
-        run: java -ea -jar ./build/libs/deft4j-all.jar --mode=ZOPFLI_EXTENSIVE ./build/libs/deft4j.jar ./build/libs/deft4j.jar
+        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=ZOPFLI_EXTENSIVE ./deft4j-cmd/build/libs/deft4j-cmd.jar ./deft4j-cmd/build/libs/deft4j-cmd.jar
       - name: Draft release
         uses: softprops/action-gh-release@v1
         with:
@@ -42,4 +42,8 @@ jobs:
           body: Replace this text with the description of this release!
           draft: true
           prerelease: false
-          files: build/libs/*
+          files: |
+            deft4j-base/build/libs/*
+            deft4j-cmd/build/libs/*
+            deft4j-compress/build/libs/*
+            deft4j-container/build/libs/*

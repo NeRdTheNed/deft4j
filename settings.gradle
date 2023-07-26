@@ -15,3 +15,4 @@ gradleEnterprise {
 }
 
 rootProject.name = 'deft4j'
+include('deft4j-base', 'deft4j-cmd', 'deft4j-compress', 'deft4j-container')

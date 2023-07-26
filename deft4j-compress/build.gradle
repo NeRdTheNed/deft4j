@@ -7,8 +7,6 @@ buildscript {
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'io.github.nerdthened.jartighten' version '1.1.0'
 }
 
 apply plugin: 'java'
@@ -45,47 +43,12 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-shadowJar {
-    //minimize()
-
-    archiveClassifier = 'all'
-}
-
-jartighten {
-    dependsOn(shadowJar)
-
-    inputFile = layout.projectDirectory.file('build/libs/' + project.name + '-all.jar')
-    outputFile = layout.projectDirectory.file('build/libs/' + project.name + '-all.jar')
-
-    removeTimestamps = true
-    removeComments = true
-    removeExtra = true
-    removeDirectoryEntries = true
-}
-
-build.finalizedBy(jartighten)
-
 dependencies {
-    // picocli
-    implementation 'info.picocli:picocli:4.7.4'
-
-    // LL-zip
-    implementation 'software.coley:lljzip:2.1.2'
-    implementation 'org.slf4j:slf4j-api:2.0.7'
-    implementation 'org.slf4j:slf4j-jdk14:2.0.7'
-
     // Compression
     implementation 'com.github.eustas:CafeUndZopfli:5cdf283e67'
     implementation 'com.github.luccappellaro:jzopfli:0.0.4'
     implementation 'org.jruby:jzlib:1.1.5'
-}
 
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'com.github.NeRdTheNed.deft4j.Main'
-        )
-    }
+    // deft4j
+    implementation project(':deft4j-base')
 }
-
-build.finalizedBy(shadowJar)

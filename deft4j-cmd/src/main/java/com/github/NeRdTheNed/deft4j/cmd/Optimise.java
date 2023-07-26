@@ -1,18 +1,17 @@
-package com.github.NeRdTheNed.deft4j;
+package com.github.NeRdTheNed.deft4j.cmd;
 
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-import com.github.NeRdTheNed.deft4j.Deft.RecompressMode;
+import com.github.NeRdTheNed.deft4j.cmd.CMDUtil.RecompressMode;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "deft4j", mixinStandardHelpOptions = true, version = "deft4j v1.0.0",
-         description = "Deflate stream optimiser")
-public class Main implements Callable<Integer> {
+@Command(name = "optimise", mixinStandardHelpOptions = true, description = "Deflate stream optimiser")
+public class Optimise implements Callable<Integer> {
     @Parameters(index = "0", description = "The file to optimise")
     private Path inputFile;
 
@@ -30,7 +29,7 @@ public class Main implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        final Deft deft = new Deft(recompressMode);
+        final CMDUtil deft = new CMDUtil(recompressMode);
         boolean didOpt = false;
 
         try {
@@ -46,10 +45,5 @@ public class Main implements Callable<Integer> {
         }
 
         return didOpt ? CommandLine.ExitCode.OK : 1;
-    }
-
-    public static void main(String[] args) {
-        final int exitCode = new CommandLine(new Main()).execute(args);
-        System.exit(exitCode);
     }
 }

@@ -101,6 +101,10 @@ public class ZipFile implements DeflateFilesContainer {
                 localFile.adoptLinkedCentralDirectoryValues();
             }
 
+            if (localFile.getUncompressedSize() == 0) {
+                continue;
+            }
+
             final byte[] compressed = ByteDataUtil.toByteArray(localFile.getFileData());
             final ByteArrayInputStream bis = new ByteArrayInputStream(compressed);
             String name = null;
