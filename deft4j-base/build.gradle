@@ -45,3 +45,15 @@ repositories {
 dependencies {
 
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.github.NeRdTheNed.deft4j'
+            artifactId = 'deft4j-base'
+            version = '1.0.0'
+
+            from components.java
+        }
+    }
+}
