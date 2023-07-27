@@ -174,7 +174,8 @@ public class Huffman {
         // Start reading bits
         do {
             if (codeLen == 15) {
-                throw new AssertionError("Couldn't find code " + code + " len " + codeLen);
+                //throw new AssertionError("Couldn't find code " + code + " len " + codeLen);
+                return new DecodedSym(-1, 0, -1);
             }
 
             // Read one bit
