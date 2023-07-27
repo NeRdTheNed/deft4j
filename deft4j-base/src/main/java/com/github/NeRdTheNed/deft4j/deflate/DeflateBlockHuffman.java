@@ -138,14 +138,13 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, boolean print, String optPrefix, boolean prune) {
         long savedTotal = 0;
         final ListIterator<LitLen> litIter = checkLitlens.listIterator();
-
-        while (litIter.hasNext()) {
+        checkNext: while (litIter.hasNext()) {
             final LitLen check = litIter.next();
 
             // Replace matches with literals if smaller
             if (check.dist != 0) {
                 assert check.decodedVal != null;
-                boolean skip = false;
+                final int checkSize = check.encodedSize;
                 final List<LitLen> replace = new ArrayList<>();
                 int totalSize = 0;
 
@@ -162,38 +161,38 @@ public class DeflateBlockHuffman extends DeflateBlock {
                             System.out.println(optPrefix + "Possible missed optimisation: no literal code for " + b);
                         }
 
-                        skip = true;
-                        break;
+                        continue checkNext;
                     }
 
                     totalSize += lit.encodedSize;
+
+                    if (prune ? totalSize > checkSize : totalSize >= checkSize) {
+                        continue checkNext;
+                    }
+
                     replace.add(lit);
                 }
 
-                final boolean remove = prune ? totalSize <= check.encodedSize : totalSize < check.encodedSize;
-
-                if (!skip && remove) {
-                    if (DEBUG_PRINT_OPT_REFREPLACE && print) {
-                        System.out.println(optPrefix + "Found size " + check.encodedSize + ", replacing with size " + totalSize);
-                        System.out.println(optPrefix + "Original: " + check + "\nNew:");
-
-                        for (final LitLen rep : replace) {
-                            System.out.println(rep);
-                        }
-                    }
-
-                    final int saved = check.encodedSize - totalSize;
-                    assert (prune && (saved >= 0)) || (saved > 0);
-                    savedTotal += saved;
-                    litIter.remove();
+                if (DEBUG_PRINT_OPT_REFREPLACE && print) {
+                    System.out.println(optPrefix + "Found size " + checkSize + ", replacing with size " + totalSize);
+                    System.out.println(optPrefix + "Original: " + check + "\nNew:");
 
                     for (final LitLen rep : replace) {
-                        litIter.add(rep);
+                        System.out.println(rep);
                     }
+                }
 
-                    if (DEBUG_PRINT_OPT_REFREPLACE && print) {
-                        System.out.println(optPrefix + "Did replace, saved " + saved);
-                    }
+                final int saved = checkSize - totalSize;
+                assert (prune && (saved >= 0)) || (saved > 0);
+                savedTotal += saved;
+                litIter.remove();
+
+                for (final LitLen rep : replace) {
+                    litIter.add(rep);
+                }
+
+                if (DEBUG_PRINT_OPT_REFREPLACE && print) {
+                    System.out.println(optPrefix + "Did replace, saved " + saved);
                 }
             }
         }
