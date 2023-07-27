@@ -145,16 +145,14 @@ public class DeflateBlockHuffman extends DeflateBlock {
             if (check.dist != 0) {
                 assert check.decodedVal != null;
                 final int checkSize = check.encodedSize;
-                final List<LitLen> replace = new ArrayList<>();
+                final int arrSize = check.decodedVal.length;
                 int totalSize = 0;
 
-                for (final byte bNeg : check.decodedVal) {
-                    final int b = bNeg & 0xFF;
-                    final LitLen lit = new LitLen(b);
-                    lit.decodedVal = new byte[] { bNeg };
-                    lit.encodedSize = decoder.getSymLen(b);
+                for (int i = 0; i < arrSize; i++) {
+                    final int b = check.decodedVal[i] & 0xFF;
+                    final int bSize = decoder.getSymLen(b);
 
-                    if (lit.encodedSize < 1) {
+                    if (bSize < 1) {
                         // No symbol for this literal
                         // TODO Add code if it saves space overall
                         if (DEBUG_PRINT_OPT_REFREPLACE && print) {
@@ -164,22 +162,16 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         continue checkNext;
                     }
 
-                    totalSize += lit.encodedSize;
+                    totalSize += bSize;
 
                     if (prune ? totalSize > checkSize : totalSize >= checkSize) {
                         continue checkNext;
                     }
-
-                    replace.add(lit);
                 }
 
                 if (DEBUG_PRINT_OPT_REFREPLACE && print) {
                     System.out.println(optPrefix + "Found size " + checkSize + ", replacing with size " + totalSize);
                     System.out.println(optPrefix + "Original: " + check + "\nNew:");
-
-                    for (final LitLen rep : replace) {
-                        System.out.println(rep);
-                    }
                 }
 
                 final int saved = checkSize - totalSize;
@@ -187,7 +179,17 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 savedTotal += saved;
                 litIter.remove();
 
-                for (final LitLen rep : replace) {
+                for (int i = 0; i < arrSize; i++) {
+                    final byte bNeg = check.decodedVal[i];
+                    final int b = bNeg & 0xFF;
+                    final LitLen rep = new LitLen(b);
+                    rep.decodedVal = new byte[] { bNeg };
+                    rep.encodedSize = decoder.getSymLen(b);
+
+                    if (DEBUG_PRINT_OPT_REFREPLACE && print) {
+                        System.out.println(rep);
+                    }
+
                     litIter.add(rep);
                 }
 
