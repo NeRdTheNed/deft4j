@@ -206,6 +206,11 @@ public class DeflateStream {
         return recoded;
     }
 
+    private static final boolean TRY_ALT_8 = false;
+
+    private static final boolean DEFAULT_8 = false;
+    private static final boolean ALT_8 = !DEFAULT_8;
+
     private static void addOptimisedRecoded(Consumer<Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(toOptimise, baseName);
@@ -219,7 +224,7 @@ public class DeflateStream {
             for (final boolean pre : new boolean[] {true, false}) {
                 for (final boolean ohh : new boolean[] {true, false}) {
                     if (ohh) {
-                        for (final boolean alt8 : new boolean[] {false, true}) {
+                        for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
                             for (final boolean use8 : new boolean[] {true, false}) {
                                 for (final boolean use7 : new boolean[] {true, false}) {
                                     if (!use8 && (alt8 || !use7)) {
