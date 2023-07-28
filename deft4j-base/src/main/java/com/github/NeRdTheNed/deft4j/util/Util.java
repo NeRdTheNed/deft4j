@@ -45,6 +45,14 @@ public final class Util {
         return combined;
     }
 
+    /** Creates a new array with the contents of both arrays */
+    public static byte[] combine(byte[] a1, byte[] a2) {
+        final byte[] combined = new byte[a1.length + a2.length];
+        System.arraycopy(a1, 0, combined, 0, a1.length);
+        System.arraycopy(a2, 0, combined, a1.length, a2.length);
+        return combined;
+    }
+
     /** Reads the contents of an input stream to a byte array */
     public static byte[] convertInputStreamToBytes(InputStream in) throws IOException {
         final ByteArrayOutputStream result = new ByteArrayOutputStream();

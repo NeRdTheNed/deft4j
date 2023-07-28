@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.CRC32;
 
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
@@ -22,6 +24,51 @@ public class PNGFile implements DeflateFilesContainer {
 
         public boolean isIEND() {
             return (type[0] == 'I') && (type[1] == 'E') && (type[2] == 'N') && (type[3] == 'D');
+        }
+
+        public boolean iszTXt() {
+            return (type[0] == 'z') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
+        }
+
+        public boolean isZLibCompressedNonIdat() {
+            return iszTXt();
+        }
+
+        public String type() {
+            return new String(type);
+        }
+
+        public byte[] getZLibCompressedNonIdat() {
+            if (iszTXt()) {
+                final int offset = Util.strlen(data, 0) + 2;
+
+                if (data[offset - 1] != 0) {
+                    System.out.println("Only deflate compression is currently supported for zTXt chunks");
+                    return null;
+                }
+
+                final int length = data.length - offset;
+                final byte[] ret = new byte[length];
+                System.arraycopy(data, offset, ret, 0, length);
+                return ret;
+            }
+
+            assert(!isZLibCompressedNonIdat());
+            return null;
+        }
+
+        public void setZLibCompressedNonIdat(byte[] newZLibData) {
+            if (iszTXt()) {
+                final int offset = Util.strlen(data, 0) + 2;
+                final int length = newZLibData.length + offset;
+                final byte[] newData = new byte[length];
+                System.arraycopy(data, 0, newData, 0, offset);
+                System.arraycopy(newZLibData, 0, newData, offset, newZLibData.length);
+                data = newData;
+                return;
+            }
+
+            assert(!isZLibCompressedNonIdat());
         }
 
         public boolean write(OutputStream os) throws IOException {
@@ -131,14 +178,27 @@ public class PNGFile implements DeflateFilesContainer {
             index++;
             toWrite -= toCopy;
         } while (toWrite > 0);
+
+        deflateStreamMapNonIDAT.forEach((c, d) -> {
+            try {
+                c.setZLibCompressedNonIdat(d.write());
+            } catch (final IOException e) {
+                System.out.println("Error writing deflate stream to " + c.type() + " chunk in PNG file");
+                e.printStackTrace();
+            }
+        });
     }
 
     // TODO Support other deflate compressed chunks (zTXt ect)
     ZLibFile idat;
 
+    private Map<PNGChunk, DeflateFilesContainer> deflateStreamMapNonIDAT;
+
     @Override
     public List<DeflateStream> getDeflateStreams() {
-        return idat.getDeflateStreams();
+        final ArrayList<DeflateStream> fileList = new ArrayList<>(idat.getDeflateStreams());
+        deflateStreamMapNonIDAT.values().forEach(e -> fileList.addAll(e.getDeflateStreams()));
+        return fileList;
     }
 
     @Override
@@ -175,6 +235,7 @@ public class PNGFile implements DeflateFilesContainer {
         // Read all IDAT chunks to bytes
         final ByteArrayOutputStream boas = new ByteArrayOutputStream();
         pngChunks = new ArrayList<>();
+        deflateStreamMapNonIDAT = new HashMap<>();
         PNGChunk lastChunk;
 
         do {
@@ -184,8 +245,21 @@ public class PNGFile implements DeflateFilesContainer {
                 return false;
             }
 
-            if (nextChunk.isIDAT() && (nextChunk.data.length > 0)) {
-                boas.write(nextChunk.data);
+            if ((nextChunk.data.length > 0)) {
+                if (nextChunk.isIDAT()) {
+                    boas.write(nextChunk.data);
+                } else if (nextChunk.isZLibCompressedNonIdat()) {
+                    final byte[] zlibCompressed = nextChunk.getZLibCompressedNonIdat();
+
+                    if (zlibCompressed != null) {
+                        final ZLibFile zlibContainer = new ZLibFile();
+
+                        if (zlibContainer.read(zlibCompressed)) {
+                            zlibContainer.deflateStream.setName(nextChunk.type() + " chunk");
+                            deflateStreamMapNonIDAT.put(nextChunk, zlibContainer);
+                        }
+                    }
+                }
             }
 
             pngChunks.add(nextChunk);
@@ -194,7 +268,13 @@ public class PNGFile implements DeflateFilesContainer {
 
         // Read the ZLib container from the IDAT bytes
         idat = new ZLibFile();
-        return idat.read(boas.toByteArray());
+        final boolean res = idat.read(boas.toByteArray());
+
+        if (res) {
+            idat.deflateStream.setName("IDAT chunk");
+        }
+
+        return res;
     }
 
     @Override

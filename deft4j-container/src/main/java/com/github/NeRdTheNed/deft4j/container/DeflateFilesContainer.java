@@ -1,6 +1,7 @@
 package com.github.NeRdTheNed.deft4j.container;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,6 +49,16 @@ public interface DeflateFilesContainer {
     default boolean read(byte[] bytes) throws IOException {
         final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         return read(bais);
+    }
+
+    default byte[] write() throws IOException {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        if (!write(baos)) {
+            throw new IOException("Could not write container to bytes");
+        }
+
+        return baos.toByteArray();
     }
 
     /** Optimise all streams in this container. Returns the total amount of bits saved. */

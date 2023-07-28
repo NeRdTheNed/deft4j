@@ -17,7 +17,7 @@ import com.github.NeRdTheNed.deft4j.util.Pair;
 
 public class DeflateStream {
     private static final String DEFAULT_NAME = "unnamed stream";
-    private final String name;
+    private String name;
 
     public DeflateStream(String name) {
         if (name == null) {
@@ -53,6 +53,10 @@ public class DeflateStream {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     private DeflateBlock firstBlock;
