@@ -310,10 +310,10 @@ public class DeflateStream {
         if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
             final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallback = toFixed -> {
                 // Fixed huffman block
-                final String name = toFixed.v + " fixed-huffman";
+                /*final String name = toFixed.v + " fixed-huffman";
                 final DeflateBlockHuffman fixed = toFixedHuffman(toFixed.k);
                 fixed.optimise();
-                callback.accept(new Pair<>(fixed, name));
+                callback.accept(new Pair<>(fixed, name));*/
 
                 // Post recoded header
                 final String namePost = toFixed.v + " post-recoded";
@@ -335,6 +335,10 @@ public class DeflateStream {
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
             runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
             runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
+            // Fixed huffman block
+            final DeflateBlockHuffman fixed = toFixedHuffman(toOptimiseHuffman);
+            fixed.optimise();
+            callback.accept(new Pair<>(fixed, "default fixed-huffman"));
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ");
         }
 
