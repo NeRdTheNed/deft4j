@@ -18,11 +18,11 @@ public class PNGFile implements DeflateFilesContainer {
         byte[] data;
 
         public boolean isIDAT() {
-            return (type[0] == 73) && (type[1] == 68) && (type[2] == 65) && (type[3] == 84);
+            return (type[0] == 'I') && (type[1] == 'D') && (type[2] == 'A') && (type[3] == 'T');
         }
 
         public boolean isIEND() {
-            return (type[0] == 73) && (type[1] == 69) && (type[2] == 78) && (type[3] == 68);
+            return (type[0] == 'I') && (type[1] == 'E') && (type[2] == 'N') && (type[3] == 'D');
         }
 
         public boolean write(OutputStream os) throws IOException {
@@ -120,10 +120,10 @@ public class PNGFile implements DeflateFilesContainer {
         do {
             final PNGChunk chunk = new PNGChunk();
             // IDAT chunk type
-            chunk.type[0] = 73;
-            chunk.type[1] = 68;
-            chunk.type[2] = 65;
-            chunk.type[3] = 84;
+            chunk.type[0] = 'I';
+            chunk.type[1] = 'D';
+            chunk.type[2] = 'A';
+            chunk.type[3] = 'T';
             // Copy as many bytes as the ZLib container has, or the maximum chunk size
             final int toCopy = (int) Math.min(toWrite, Integer.MAX_VALUE);
             chunk.data = new byte[toCopy];
@@ -147,9 +147,9 @@ public class PNGFile implements DeflateFilesContainer {
         syncStreams();
         // PNG header
         os.write(137);
-        os.write(80);
-        os.write(78);
-        os.write(71);
+        os.write('P');
+        os.write('N');
+        os.write('G');
         os.write(13);
         os.write(10);
         os.write(26);
@@ -169,7 +169,7 @@ public class PNGFile implements DeflateFilesContainer {
         // Check if data is likely PNG
         if ((is == null)
                 // Check PNG signature
-                || (is.read() != 137) || (is.read() != 80) || (is.read() != 78) || (is.read() != 71) || (is.read() != 13) || (is.read() != 10) || (is.read() != 26) || (is.read() != 10)) {
+                || (is.read() != 137) || (is.read() != 'P') || (is.read() != 'N') || (is.read() != 'G') || (is.read() != 13) || (is.read() != 10) || (is.read() != 26) || (is.read() != 10)) {
             return false;
         }
 
