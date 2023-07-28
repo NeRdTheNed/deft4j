@@ -388,7 +388,7 @@ public class DeflateStream {
                 currentBlock.remove();
             } else {
                 // Only one block, and it's empty, but it's technically still a deflate stream.
-                pos += currentBlock.getSizeBits(pos);
+                pos += currentBlock.getSizeBits(pos + 3) + 3;
             }
 
             if (finishPass) {
