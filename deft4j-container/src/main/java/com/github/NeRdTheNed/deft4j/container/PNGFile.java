@@ -30,8 +30,12 @@ public class PNGFile implements DeflateFilesContainer {
             return (type[0] == 'z') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
         }
 
+        public boolean isiCCP() {
+            return (type[0] == 'i') && (type[1] == 'C') && (type[2] == 'C') && (type[3] == 'P');
+        }
+
         public boolean isZLibCompressedNonIdat() {
-            return iszTXt();
+            return iszTXt() || isiCCP();
         }
 
         public String type() {
@@ -39,7 +43,7 @@ public class PNGFile implements DeflateFilesContainer {
         }
 
         public byte[] getZLibCompressedNonIdat() {
-            if (iszTXt()) {
+            if (iszTXt() || isiCCP()) {
                 final int offset = Util.strlen(data, 0) + 2;
 
                 if (data[offset - 1] != 0) {
@@ -58,7 +62,7 @@ public class PNGFile implements DeflateFilesContainer {
         }
 
         public void setZLibCompressedNonIdat(byte[] newZLibData) {
-            if (iszTXt()) {
+            if (iszTXt() || isiCCP()) {
                 final int offset = Util.strlen(data, 0) + 2;
                 final int length = newZLibData.length + offset;
                 final byte[] newData = new byte[length];
