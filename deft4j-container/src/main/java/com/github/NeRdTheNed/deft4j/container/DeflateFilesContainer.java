@@ -1,5 +1,6 @@
 package com.github.NeRdTheNed.deft4j.container;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,6 +44,11 @@ public interface DeflateFilesContainer {
 
     boolean write(OutputStream os) throws IOException;
     boolean read(InputStream is) throws IOException;
+
+    default boolean read(byte[] bytes) throws IOException {
+        final ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        return read(bais);
+    }
 
     /** Optimise all streams in this container. Returns the total amount of bits saved. */
     default long optimise() {

@@ -1,6 +1,5 @@
 package com.github.NeRdTheNed.deft4j.container;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -194,9 +193,8 @@ public class PNGFile implements DeflateFilesContainer {
         } while (!lastChunk.isIEND());
 
         // Read the ZLib container from the IDAT bytes
-        final ByteArrayInputStream bais = new ByteArrayInputStream(boas.toByteArray());
         idat = new ZLibFile();
-        return idat.read(bais);
+        return idat.read(boas.toByteArray());
     }
 
     @Override
