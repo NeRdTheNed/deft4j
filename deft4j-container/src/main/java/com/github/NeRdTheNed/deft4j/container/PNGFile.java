@@ -34,8 +34,12 @@ public class PNGFile implements DeflateFilesContainer {
             return (type[0] == 'i') && (type[1] == 'C') && (type[2] == 'C') && (type[3] == 'P');
         }
 
+        public boolean isiTXt() {
+            return (type[0] == 'i') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
+        }
+
         public boolean isZLibCompressedNonIdat() {
-            return iszTXt() || isiCCP();
+            return iszTXt() || isiCCP() || isiTXt();
         }
 
         public String type() {
@@ -43,12 +47,27 @@ public class PNGFile implements DeflateFilesContainer {
         }
 
         public byte[] getZLibCompressedNonIdat() {
-            if (iszTXt() || isiCCP()) {
-                final int offset = Util.strlen(data, 0) + 2;
+            final boolean isiTXt = isiTXt();
+
+            if (isiTXt || iszTXt() || isiCCP()) {
+                int offset = Util.strlen(data, 0) + 2;
+
+                if (isiTXt) {
+                    if (data[offset - 1] != 1) {
+                        return null;
+                    }
+
+                    offset++;
+                }
 
                 if (data[offset - 1] != 0) {
-                    System.out.println("Only deflate compression is currently supported for zTXt chunks");
+                    System.out.println("Only deflate compression is currently supported for " + type() + " chunks (read method " + data[offset - 1] + ")");
                     return null;
+                }
+
+                if (isiTXt) {
+                    offset += Util.strlen(data, offset) + 1;
+                    offset += Util.strlen(data, offset) + 1;
                 }
 
                 final int length = data.length - offset;
@@ -62,8 +81,17 @@ public class PNGFile implements DeflateFilesContainer {
         }
 
         public void setZLibCompressedNonIdat(byte[] newZLibData) {
-            if (iszTXt() || isiCCP()) {
-                final int offset = Util.strlen(data, 0) + 2;
+            final boolean isiTXt = isiTXt();
+
+            if (isiTXt || iszTXt() || isiCCP()) {
+                int offset = Util.strlen(data, 0) + 2;
+
+                if (isiTXt) {
+                    offset++;
+                    offset += Util.strlen(data, offset) + 1;
+                    offset += Util.strlen(data, offset) + 1;
+                }
+
                 final int length = newZLibData.length + offset;
                 final byte[] newData = new byte[length];
                 System.arraycopy(data, 0, newData, 0, offset);
