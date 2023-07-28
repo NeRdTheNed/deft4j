@@ -355,8 +355,10 @@ public class DeflateStream {
 
         while (currentBlock != null) {
             boolean finishPass = true;
+            boolean didRemove = false;
 
-            if (currentBlock.getUncompressedData().length > 0) {
+            // Optimise block if it's not empty, or it's the only block in a stream
+            if ((currentBlock.getUncompressedData().length > 0) || (first && (currentBlock.getNext() == null))) {
                 pos += 3;
                 final DeflateBlock optimisedBlock = optimiseBlock(currentBlock, pos);
                 final long currentSaved = currentBlock.getSizeBits(pos) - optimisedBlock.getSizeBits(pos);
@@ -380,7 +382,7 @@ public class DeflateStream {
                 }
 
                 pos += currentBlock.getSizeBits(pos);
-            } else if (!first || (currentBlock.getNext() != null)) {
+            } else {
                 final long currentSaved = currentBlock.getSizeBits(pos + 3) + 3;
 
                 if (PRINT_OPT_FINE) {
@@ -394,15 +396,17 @@ public class DeflateStream {
                 }
 
                 currentBlock.remove();
-            } else {
-                // Only one block, and it's empty, but it's technically still a deflate stream.
-                pos += currentBlock.getSizeBits(pos + 3) + 3;
+                didRemove = true;
             }
 
             if (finishPass) {
                 block++;
                 currentBlock = currentBlock.getNext();
-                first = false;
+
+                if (first && !didRemove) {
+                    first = false;
+                }
+
                 pass = 0;
             }
         }
