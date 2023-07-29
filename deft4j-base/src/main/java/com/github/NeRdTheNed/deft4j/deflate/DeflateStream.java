@@ -210,6 +210,25 @@ public class DeflateStream {
         return recoded;
     }
 
+    private static DeflateBlockHuffman recodedHuffmanFull(DeflateBlockHuffman block, long align) {
+        DeflateBlockHuffman check = null;
+        long prevSize = block.getSizeBits(align);
+
+        while (true) {
+            check = recodedHuffman(block, true);
+            final long thisSize = check.getSizeBits(align);
+
+            if (thisSize >= prevSize) {
+                break;
+            }
+
+            block = check;
+            prevSize = thisSize;
+        }
+
+        return block;
+    }
+
     private static DeflateBlockHuffman leastPruned(DeflateBlockHuffman block) {
         final DeflateBlockHuffman recoded = (DeflateBlockHuffman) block.copy();
         recoded.removeDistLitLeastExpensive();
@@ -221,11 +240,12 @@ public class DeflateStream {
     private static final boolean DEFAULT_8 = false;
     private static final boolean ALT_8 = !DEFAULT_8;
 
-    private static void addOptimisedRecoded(Consumer<Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName) {
+    private static void addOptimisedRecoded(Consumer<Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(toOptimise, baseName);
         blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
         blocks.put(recodedHuffman(toOptimise, true), baseName + "huffman-recoded-pruned ");
+        blocks.put(recodedHuffmanFull(toOptimise, position), baseName + "huffman-recoded-pruned-full ");
 
         for (final Entry<DeflateBlockHuffman, String> entry : blocks.entrySet()) {
             final DeflateBlockHuffman block = entry.getKey();
@@ -327,7 +347,7 @@ public class DeflateStream {
                 post.recodeHeader();
                 callback.accept(new Pair<>(post, namePost));
                 callback.accept(new Pair<>(optimiseBlockNormal(post), namePost + " optimised"));
-                addOptimisedRecoded(callback::accept, post, namePost + " ");
+                addOptimisedRecoded(callback::accept, post, namePost + " ", position);
 
                 // RLE pruned header
                 final String namePrune = toFixed.v + " pruned";
@@ -335,12 +355,12 @@ public class DeflateStream {
                 prune.recodeHeaderToLessRLEMatches();
                 callback.accept(new Pair<>(prune, namePrune));
                 callback.accept(new Pair<>(optimiseBlockNormal(prune), namePrune + " optimised"));
-                addOptimisedRecoded(callback::accept, prune, namePrune + " ");
+                addOptimisedRecoded(callback::accept, prune, namePrune + " ", position);
 
                 // Least-expensive dist litlen pruned
-                addOptimisedRecoded(callback::accept, leastPruned(toFixed.k), toFixed.v + "-least ");
-                addOptimisedRecoded(callback::accept, leastPruned(post), namePost + "-least ");
-                addOptimisedRecoded(callback::accept, leastPruned(prune), namePrune + "-least ");
+                addOptimisedRecoded(callback::accept, leastPruned(toFixed.k), toFixed.v + "-least ", position);
+                addOptimisedRecoded(callback::accept, leastPruned(post), namePost + "-least ", position);
+                addOptimisedRecoded(callback::accept, leastPruned(prune), namePrune + "-least ", position);
             };
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
@@ -350,8 +370,8 @@ public class DeflateStream {
             final DeflateBlockHuffman fixed = toFixedHuffman(toOptimiseHuffman);
             fixed.optimise();
             callback.accept(new Pair<>(fixed, "default fixed-huffman"));
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ");
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastPruned(toOptimiseHuffman), "default-least ");
+            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ", position);
+            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastPruned(toOptimiseHuffman), "default-least ", position);
             //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");
         }
 
