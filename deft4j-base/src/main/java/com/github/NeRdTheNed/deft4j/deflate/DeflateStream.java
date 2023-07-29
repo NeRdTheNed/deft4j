@@ -244,8 +244,13 @@ public class DeflateStream {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(toOptimise, baseName);
         blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
-        blocks.put(recodedHuffman(toOptimise, true), baseName + "huffman-recoded-pruned ");
-        blocks.put(recodedHuffmanFull(toOptimise, position), baseName + "huffman-recoded-pruned-full ");
+        final DeflateBlockHuffman pruned = recodedHuffman(toOptimise, true);
+        blocks.put(pruned, baseName + "huffman-recoded-pruned ");
+        final DeflateBlockHuffman prunedFull = recodedHuffmanFull(pruned, position);
+
+        if (prunedFull != pruned) {
+            blocks.put(prunedFull, baseName + "huffman-recoded-pruned-full ");
+        }
 
         for (final Entry<DeflateBlockHuffman, String> entry : blocks.entrySet()) {
             final DeflateBlockHuffman block = entry.getKey();
