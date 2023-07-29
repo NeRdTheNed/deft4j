@@ -256,6 +256,87 @@ public class DeflateBlockHuffman extends DeflateBlock {
         dynamicHeaderSizeBits -= savedHeader;
     }
 
+    public void removeDistLitLeastExpensive() {
+        if (type != DeflateBlockType.DYNAMIC) {
+            return;
+        }
+
+        final int[] litSize = new int[Constants.MAX_DIST_LENS];
+        final boolean[] litNoAllow = new boolean[Constants.MAX_DIST_LENS];
+        final boolean[] litSeen = new boolean[Constants.MAX_DIST_LENS];
+        checkNext: for (final LitLen check : litlens) {
+            if (check.dist != 0) {
+                assert check.decodedVal != null;
+                final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
+                litSeen[litlen] = true;
+
+                if (litNoAllow[litlen]) {
+                    continue;
+                }
+
+                final int checkSize = check.encodedSize;
+                final int arrSize = check.decodedVal.length;
+                int totalSize = 0;
+
+                for (int i = 0; i < arrSize; i++) {
+                    final int b = check.decodedVal[i] & 0xFF;
+                    final int bSize = litlenDec.getSymLen(b);
+
+                    if (bSize < 1) {
+                        // No symbol for this literal, can't remove
+                        litNoAllow[litlen] = true;
+                        continue checkNext;
+                    }
+
+                    totalSize += bSize;
+                }
+
+                litSize[litlen] += totalSize - checkSize;
+            }
+        }
+
+        int litlenRem = -1;
+        int litlenRemSize = 0;
+
+        for (int i = 0; i < litSize.length; i++) {
+            if (!litNoAllow[i] && litSeen[i] && ((litlenRem == -1) || (litSize[i] < litlenRemSize))) {
+                litlenRem = i;
+                litlenRemSize = litSize[i];
+            }
+        }
+
+        if (litlenRem >= 0) {
+            final ListIterator<LitLen> litIter = litlens.listIterator();
+
+            while (litIter.hasNext()) {
+                final LitLen check = litIter.next();
+
+                if (check.dist != 0) {
+                    assert check.decodedVal != null;
+                    final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
+
+                    if (litlen != litlenRem) {
+                        continue;
+                    }
+
+                    final int arrSize = check.decodedVal.length;
+                    litIter.remove();
+
+                    for (int i = 0; i < arrSize; i++) {
+                        final byte bNeg = check.decodedVal[i];
+                        final int b = bNeg & 0xFF;
+                        final LitLen rep = new LitLen(b);
+                        rep.decodedVal = new byte[] { bNeg };
+                        rep.encodedSize = litlenDec.getSymLen(b);
+                        litIter.add(rep);
+                    }
+                }
+            }
+        }
+
+        sizeBits += litlenRemSize;
+    }
+
     @Override
     public long optimise() {
         // TODO Merge blocks with same huffman codes
