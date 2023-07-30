@@ -344,7 +344,23 @@ public class DeflateStream {
             callback.accept(new Pair<>(toOptimise.asUncompressed(), "uncompressed"));
         }
 
-        if (toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
+        DeflateBlockHuffman toOptimiseHuffman = null;
+        DeflateBlockHuffman optimisedHuffman = null;
+        final boolean isOrigDyn = toOptimise.getDeflateBlockType() == DeflateBlockType.DYNAMIC;
+        final boolean isOrigFixed = toOptimise.getDeflateBlockType() == DeflateBlockType.FIXED;
+
+        if (isOrigDyn) {
+            toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
+            optimisedHuffman = (DeflateBlockHuffman) optimised;
+        } else if (isOrigFixed) {
+            toOptimiseHuffman = (DeflateBlockHuffman) ((DeflateBlockHuffman) toOptimise).copy();
+            toOptimiseHuffman.recodeHuffman();
+            optimisedHuffman = (DeflateBlockHuffman) toOptimiseHuffman.copy();
+            optimisedHuffman.optimise();
+        }
+
+        if (toOptimiseHuffman != null) {
+            assert(optimisedHuffman != null);
             final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallback = toFixed -> {
                 // Fixed huffman block
                 /*final String name = toFixed.v + " fixed-huffman";
@@ -378,14 +394,16 @@ public class DeflateStream {
                 /*addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
                 addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);*/
             };
-            final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
-            final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
             runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
             runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
-            // Fixed huffman block
-            final DeflateBlockHuffman fixed = toFixedHuffman(toOptimiseHuffman);
-            fixed.optimise();
-            callback.accept(new Pair<>(fixed, "default fixed-huffman"));
+
+            if (!isOrigFixed) {
+                // Fixed huffman block
+                final DeflateBlockHuffman fixed = toFixedHuffman(toOptimiseHuffman);
+                fixed.optimise();
+                callback.accept(new Pair<>(fixed, "default fixed-huffman"));
+            }
+
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ", position);
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
