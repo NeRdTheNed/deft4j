@@ -370,13 +370,13 @@ public class DeflateStream {
 
                 // Least-expensive dist litlen pruned
                 addOptimisedRecoded(callback::accept, leastExpPruned(toFixed.k), toFixed.v + "-least-exp ", position);
-                addOptimisedRecoded(callback::accept, leastExpPruned(post), namePost + "-least-exp ", position);
-                addOptimisedRecoded(callback::accept, leastExpPruned(prune), namePrune + "-least-exp ", position);
+                /*addOptimisedRecoded(callback::accept, leastExpPruned(post), namePost + "-least-exp ", position);
+                addOptimisedRecoded(callback::accept, leastExpPruned(prune), namePrune + "-least-exp ", position);*/
 
                 // Least-seen dist litlen pruned
                 addOptimisedRecoded(callback::accept, leastSeenPruned(toFixed.k), toFixed.v + "-least-seen ", position);
-                addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
-                addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);
+                /*addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
+                addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);*/
             };
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
