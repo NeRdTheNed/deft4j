@@ -229,9 +229,15 @@ public class DeflateStream {
         return block;
     }
 
-    private static DeflateBlockHuffman leastPruned(DeflateBlockHuffman block) {
+    private static DeflateBlockHuffman leastExpPruned(DeflateBlockHuffman block) {
         final DeflateBlockHuffman recoded = (DeflateBlockHuffman) block.copy();
-        recoded.removeDistLitLeastExpensive();
+        recoded.removeDistLitLeastExpensive(0);
+        return recoded;
+    }
+
+    private static DeflateBlockHuffman leastSeenPruned(DeflateBlockHuffman block) {
+        final DeflateBlockHuffman recoded = (DeflateBlockHuffman) block.copy();
+        recoded.removeDistLitLeastExpensive(1);
         return recoded;
     }
 
@@ -363,9 +369,14 @@ public class DeflateStream {
                 addOptimisedRecoded(callback::accept, prune, namePrune + " ", position);
 
                 // Least-expensive dist litlen pruned
-                addOptimisedRecoded(callback::accept, leastPruned(toFixed.k), toFixed.v + "-least ", position);
-                addOptimisedRecoded(callback::accept, leastPruned(post), namePost + "-least ", position);
-                addOptimisedRecoded(callback::accept, leastPruned(prune), namePrune + "-least ", position);
+                addOptimisedRecoded(callback::accept, leastExpPruned(toFixed.k), toFixed.v + "-least-exp ", position);
+                addOptimisedRecoded(callback::accept, leastExpPruned(post), namePost + "-least-exp ", position);
+                addOptimisedRecoded(callback::accept, leastExpPruned(prune), namePrune + "-least-exp ", position);
+
+                // Least-seen dist litlen pruned
+                addOptimisedRecoded(callback::accept, leastSeenPruned(toFixed.k), toFixed.v + "-least-seen ", position);
+                addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
+                addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);
             };
             final DeflateBlockHuffman toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             final DeflateBlockHuffman optimisedHuffman = (DeflateBlockHuffman) optimised;
@@ -376,7 +387,8 @@ public class DeflateStream {
             fixed.optimise();
             callback.accept(new Pair<>(fixed, "default fixed-huffman"));
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ", position);
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastPruned(toOptimiseHuffman), "default-least ", position);
+            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
+            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
             //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");
         }
 

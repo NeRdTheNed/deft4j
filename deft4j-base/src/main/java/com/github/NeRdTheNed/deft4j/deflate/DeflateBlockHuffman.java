@@ -256,12 +256,16 @@ public class DeflateBlockHuffman extends DeflateBlock {
         dynamicHeaderSizeBits -= savedHeader;
     }
 
-    public void removeDistLitLeastExpensive() {
+    // TODO Try longest code
+    public void removeDistLitLeastExpensive(int mode) {
+        assert ((mode == 0) || (mode == 1));
+
         if (type != DeflateBlockType.DYNAMIC) {
             return;
         }
 
         final int[] litSize = new int[Constants.MAX_DIST_LENS];
+        final int[] litFreq = new int[Constants.MAX_DIST_LENS];
         final boolean[] litNoAllow = new boolean[Constants.MAX_DIST_LENS];
         final boolean[] litSeen = new boolean[Constants.MAX_DIST_LENS];
         checkNext: for (final LitLen check : litlens) {
@@ -292,16 +296,23 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 }
 
                 litSize[litlen] += totalSize - checkSize;
+                litFreq[litlen]++;
             }
         }
 
         int litlenRem = -1;
         int litlenRemSize = 0;
+        int litlenRemFreq = 0;
 
         for (int i = 0; i < litSize.length; i++) {
-            if (!litNoAllow[i] && litSeen[i] && ((litlenRem == -1) || (litSize[i] < litlenRemSize))) {
-                litlenRem = i;
-                litlenRemSize = litSize[i];
+            if (!litNoAllow[i] && litSeen[i]) {
+                final boolean doRem = mode == 1 ? (litFreq[i] < litlenRemFreq) : (litSize[i] < litlenRemSize);
+
+                if ((litlenRem == -1) || doRem) {
+                    litlenRem = i;
+                    litlenRemSize = litSize[i];
+                    litlenRemFreq = litFreq[i];
+                }
             }
         }
 
