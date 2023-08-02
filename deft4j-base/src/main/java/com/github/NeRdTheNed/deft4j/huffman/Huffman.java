@@ -203,8 +203,15 @@ public class Huffman {
         return readSym(is).decoded;
     }
 
+    private boolean didRev = false;
+
     public int getSym(int n) {
-        return Util.rev(table.code[n], table.codeLen[n]);
+        if (!didRev) {
+            table.fillRevTable();
+            didRev = true;
+        }
+
+        return table.revCode[n];
     }
 
     public int getSymLen(int n) {
