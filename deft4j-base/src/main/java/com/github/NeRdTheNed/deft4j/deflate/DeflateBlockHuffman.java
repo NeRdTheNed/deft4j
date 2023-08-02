@@ -25,8 +25,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private Huffman distDec;
 
     // TODO LinkedList?
-    private List<LitLen> litlens = new ArrayList<>();
-    private boolean didCopy = false;
+    private List<LitLen> litlens;
+    private boolean didCopyLitLens = false;
     // Decoded data
     private boolean finishedDec = false;
     private byte[] decodedData;
@@ -43,6 +43,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     private List<LitLen> rlePairsLitlen;
     private List<LitLen> rlePairsDist;
+    private boolean didCopyRLEPairs = false;
 
     private long dynamicHeaderSizeBits;
 
@@ -268,9 +269,17 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private void ensureDidCopyLitLens() {
-        if (!didCopy) {
+        if (!didCopyLitLens) {
             litlens = new ArrayList<>(litlens);
-            didCopy = true;
+            didCopyLitLens = true;
+        }
+    }
+
+    private void ensureDidCopyRLEPairs() {
+        if (!didCopyRLEPairs) {
+            rlePairsLitlen = new ArrayList<>(rlePairsLitlen);
+            rlePairsDist = new ArrayList<>(rlePairsDist);
+            didCopyRLEPairs = true;
         }
     }
 
@@ -289,8 +298,17 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         long savedHeader = 0;
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+
+        if (replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, true) >= 0) {
+            ensureDidCopyRLEPairs();
+            savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+        }
+
+        if (replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, true) >= 0) {
+            ensureDidCopyRLEPairs();
+            savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+        }
+
         sizeBits -= savedHeader;
         dynamicHeaderSizeBits -= savedHeader;
     }
@@ -459,6 +477,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         numDistLens = distDec.table.codeLen.length;
         rlePairsLitlen = new ArrayList<>();
         rlePairsDist = new ArrayList<>();
+        didCopyRLEPairs = true;
         final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh, use8, use7, alt8);
         codeLenDec = Huffman.ofRLEPacked(repack);
         //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
@@ -610,6 +629,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         codelenLengths = null;
         rlePairsLitlen = null;
         rlePairsDist = null;
+        didCopyRLEPairs = true;
         recodeToHuffmanInternal(Huffman.FIXED_LITLEN_INST, Huffman.FIXED_DIST_INST);
     }
 
@@ -729,6 +749,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     private boolean decodeStream(BitInputStream is) throws IOException {
         startTemp();
+        litlens = new ArrayList<>();
+        didCopyLitLens = true;
 
         if (DEBUG_PRINT_PARSE) {
             System.out.println("Begin litlen parsing");
@@ -856,6 +878,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         final int[] codeLengths = new int[Constants.MAX_LITLEN_LENS + Constants.MAX_DIST_LENS];
         rlePairsLitlen = new ArrayList<>();
         rlePairsDist = new ArrayList<>();
+        didCopyRLEPairs = true;
         int i = 0;
 
         while (i < (numLitlenLens + numDistLens)) {
@@ -1156,7 +1179,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             //compressedBlock.codelenLengths = new int[codelenLengths.length];
             //System.arraycopy(codelenLengths, 0, compressedBlock.codelenLengths, 0, codelenLengths.length);
             compressedBlock.codelenLengths = codelenLengths;
-            compressedBlock.rlePairsLitlen = new ArrayList<>();
+            /*compressedBlock.rlePairsLitlen = new ArrayList<>();
             compressedBlock.rlePairsDist = new ArrayList<>();
 
             for (final LitLen rlePair : rlePairsLitlen) {
@@ -1165,7 +1188,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
             for (final LitLen rlePair : rlePairsDist) {
                 compressedBlock.rlePairsDist.add(rlePair.copy());
-            }
+            }*/
+            compressedBlock.rlePairsLitlen = rlePairsLitlen;
+            compressedBlock.rlePairsDist = rlePairsDist;
         }
 
         return compressedBlock;
