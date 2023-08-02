@@ -20,8 +20,6 @@ public class HuffmanTable {
      */
     public int[] codeLen;
 
-    public int[] revCode;
-
     /**
      * Create a new Huffman table.
      * @param numSymbols The total number of symbols
@@ -199,16 +197,6 @@ public class HuffmanTable {
         for (int i = 0; i <= 29; i++) {
             DIST.code[i] = i;
             DIST.codeLen[i] = 5;
-        }
-    }
-
-    public void fillRevTable() {
-        if (revCode == null) {
-            revCode = new int[code.length];
-        }
-
-        for (int i = 0; i < code.length; i++) {
-            revCode[i] = Util.rev(code[i], codeLen[i]);
         }
     }
 }
