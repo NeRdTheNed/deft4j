@@ -472,46 +472,43 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         while (i < (numLitlenLens + numDistLens)) {
             final int sym = iter.next();
-            final LitLen rlePair = new LitLen(sym);
-            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
+            int dist = 0;
+            byte[] decodedVal;
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
-                rlePair.decodedVal = new byte[] { (byte) sym };
+                decodedVal = new byte[] { (byte) sym };
                 i++;
             } else {
-                int dist = iter.next();
+                dist = iter.next();
 
                 switch (sym) {
                 case Constants.CODELEN_COPY: {
                     // 2 bits + 3
                     dist += Constants.CODELEN_COPY_MIN;
-                    rlePair.dist = dist;
-                    rlePair.decodedVal = new byte[dist];
+                    decodedVal = new byte[dist];
                     assert prePair != null;
-                    assert (rlePair.dist >= Constants.CODELEN_COPY_MIN) && (rlePair.dist <= Constants.CODELEN_COPY_MAX);
-                    Arrays.fill(rlePair.decodedVal, prePair.decodedVal[prePair.decodedVal.length - 1]);
+                    assert (dist >= Constants.CODELEN_COPY_MIN) && (dist <= Constants.CODELEN_COPY_MAX);
+                    Arrays.fill(decodedVal, prePair.decodedVal[prePair.decodedVal.length - 1]);
                     break;
                 }
 
                 case Constants.CODELEN_ZEROS: {
                     // 3 bits + 3
                     dist += Constants.CODELEN_ZEROS_MIN;
-                    rlePair.dist = dist;
-                    rlePair.decodedVal = new byte[dist];
-                    assert (rlePair.dist >= Constants.CODELEN_ZEROS_MIN) &&
-                    (rlePair.dist <= Constants.CODELEN_ZEROS_MAX);
-                    Arrays.fill(rlePair.decodedVal, (byte) 0);
+                    decodedVal = new byte[dist];
+                    assert (dist >= Constants.CODELEN_ZEROS_MIN) &&
+                    (dist <= Constants.CODELEN_ZEROS_MAX);
+                    Arrays.fill(decodedVal, (byte) 0);
                     break;
                 }
 
                 case Constants.CODELEN_ZEROS2: {
                     // 7 bits + 138
                     dist += Constants.CODELEN_ZEROS2_MIN;
-                    rlePair.dist = dist;
-                    rlePair.decodedVal = new byte[dist];
-                    assert (rlePair.dist >= Constants.CODELEN_ZEROS2_MIN) &&
-                    (rlePair.dist <= Constants.CODELEN_ZEROS2_MAX);
-                    Arrays.fill(rlePair.decodedVal, (byte) 0);
+                    decodedVal = new byte[dist];
+                    assert (dist >= Constants.CODELEN_ZEROS2_MIN) &&
+                    (dist <= Constants.CODELEN_ZEROS2_MAX);
+                    Arrays.fill(decodedVal, (byte) 0);
                     break;
                 }
 
@@ -523,6 +520,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 i += dist;
             }
 
+            final LitLen rlePair = new LitLen(dist, sym);
+            rlePair.decodedVal = decodedVal;
+            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
             dynamicHeaderSizeBits += getRLEPairSize(rlePair, codeLenDec);
             prePair = rlePair;
         }
@@ -862,14 +862,14 @@ public class DeflateBlockHuffman extends DeflateBlock {
             final DecodedSym decodedSym = codeLenDec.readSym(is);
             dynamicHeaderSizeBits += decodedSym.codeLen;
             final int sym = decodedSym.decoded;
-            final LitLen rlePair = new LitLen(sym);
-            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
+            int dist = 0;
+            byte[] decodedVal;
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
                 // A literal codeword length
                 codeLengths[i] = sym;
                 i++;
-                rlePair.decodedVal = new byte[] { (byte) sym };
+                decodedVal = new byte[] { (byte) sym };
             } else {
                 switch (sym) {
                 case Constants.CODELEN_COPY: {
@@ -881,15 +881,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     // 2 bits + 3
                     int n = (int) is.readBits(2) + Constants.CODELEN_COPY_MIN;
                     dynamicHeaderSizeBits += 2;
-                    rlePair.dist = n;
+                    dist = n;
                     assert (n >= Constants.CODELEN_COPY_MIN) && (n <= Constants.CODELEN_COPY_MAX);
 
                     if ((i + n) > (numLitlenLens + numDistLens)) {
                         return false;
                     }
 
-                    rlePair.decodedVal = new byte[n];
-                    Arrays.fill(rlePair.decodedVal, (byte) codeLengths[i - 1]);
+                    decodedVal = new byte[n];
+                    Arrays.fill(decodedVal, (byte) codeLengths[i - 1]);
 
                     while (n-- != 0) {
                         codeLengths[i] = codeLengths[i - 1];
@@ -903,7 +903,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     // 3--10 zeros; 3 bits + 3
                     int n = (int) is.readBits(3) + Constants.CODELEN_ZEROS_MIN;
                     dynamicHeaderSizeBits += 3;
-                    rlePair.dist = n;
+                    dist = n;
                     assert (n >= Constants.CODELEN_ZEROS_MIN) &&
                     (n <= Constants.CODELEN_ZEROS_MAX);
 
@@ -911,8 +911,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         return false;
                     }
 
-                    rlePair.decodedVal = new byte[n];
-                    Arrays.fill(rlePair.decodedVal, (byte) 0);
+                    decodedVal = new byte[n];
+                    Arrays.fill(decodedVal, (byte) 0);
 
                     while (n-- != 0) {
                         codeLengths[i] = 0;
@@ -926,7 +926,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     // 11--138 zeros; 7 bits + 138
                     int n = (int) is.readBits(7) + Constants.CODELEN_ZEROS2_MIN;
                     dynamicHeaderSizeBits += 7;
-                    rlePair.dist = n;
+                    dist = n;
                     assert (n >= Constants.CODELEN_ZEROS2_MIN) &&
                     (n <= Constants.CODELEN_ZEROS2_MAX);
 
@@ -934,8 +934,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         return false;
                     }
 
-                    rlePair.decodedVal = new byte[n];
-                    Arrays.fill(rlePair.decodedVal, (byte) 0);
+                    decodedVal = new byte[n];
+                    Arrays.fill(decodedVal, (byte) 0);
 
                     while (n-- != 0) {
                         codeLengths[i] = 0;
@@ -950,6 +950,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     return false;
                 }
             }
+
+            final LitLen rlePair = new LitLen(dist, sym);
+            rlePair.decodedVal = decodedVal;
+            (i >= numLitlenLens ? rlePairsDist : rlePairsLitlen).add(rlePair);
         }
 
         final int[] litlenCodeLengths = new int[numLitlenLens];

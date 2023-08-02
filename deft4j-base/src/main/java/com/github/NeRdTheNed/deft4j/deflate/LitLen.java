@@ -26,21 +26,18 @@ public class LitLen {
         return Arrays.equals(decodedVal, other.decodedVal) && (dist == other.dist) && (litlen == other.litlen);
     }
 
-    public long dist;
-    public long litlen;
+    public final long dist;
+    public final long litlen;
 
     public byte[] decodedVal;
-
-    public LitLen() {
-    }
-
-    public LitLen(long litlen) {
-        this.litlen = litlen;
-    }
 
     public LitLen(long dist, long litlen) {
         this.dist = dist;
         this.litlen = litlen;
+    }
+
+    public LitLen(long litlen) {
+        this(0, litlen);
     }
 
     public LitLen copy() {
