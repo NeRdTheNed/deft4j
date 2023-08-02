@@ -1,6 +1,5 @@
 package com.github.NeRdTheNed.deft4j.deflate;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -160,7 +159,8 @@ public abstract class DeflateBlock {
             }
         }
 
-        final ByteArrayOutputStream collectedSlice = new ByteArrayOutputStream();
+        final byte[] collectedSlice = new byte[(int) initialSize];
+        int currentPosInArr = 0;
 
         do {
             long currentBackDist = backDist;
@@ -187,35 +187,36 @@ public abstract class DeflateBlock {
             if (((offsetFromStartOfBlock + currentSize) > currentBlockSize) && (currentBlock == thisBlock)) {
                 // Overlapping backref, start by copying any non-overlapping data
                 if (remainingBytesInBlock > 0) {
-                    collectedSlice.write(currentBlockData, (int) offsetFromStartOfBlock, (int) remainingBytesInBlock);
+                    System.arraycopy(currentBlockData, (int) offsetFromStartOfBlock, collectedSlice, currentPosInArr, (int) remainingBytesInBlock);
+                    currentPosInArr += (int) remainingBytesInBlock;
                     offsetFromStartOfBlock += remainingBytesInBlock;
                     assert currentBlockSize == offsetFromStartOfBlock;
                     currentSize = remainingBytesInBlock;
                 } else {
                     assert currentBlockSize == offsetFromStartOfBlock;
                     // Copy overlapping backref
-                    // TODO Very inefficient
-                    byte[] buffer = collectedSlice.toByteArray();
-                    long adjustedBackDist = initialBackDist - buffer.length;
+                    // TODO Somewhat inefficient
+                    long adjustedBackDist = initialBackDist - currentPosInArr;
 
                     for (int currOff = 0; currOff < (currentSize - remainingBytesInBlock); currOff++) {
-                        collectedSlice.write(buffer[(int) adjustedBackDist]);
+                        collectedSlice[currentPosInArr] = collectedSlice[(int) adjustedBackDist];
                         adjustedBackDist++;
-                        buffer = collectedSlice.toByteArray();
+                        currentPosInArr++;
                     }
                 }
             } else {
                 // Copy wanted size or until the end of block
                 currentSize = Math.min(remainingBytesInBlock, size);
                 assert currentSize > 0;
-                collectedSlice.write(currentBlockData, (int) offsetFromStartOfBlock, (int) currentSize);
+                System.arraycopy(currentBlockData, (int) offsetFromStartOfBlock, collectedSlice, currentPosInArr, (int) currentSize);
+                currentPosInArr += currentSize;
             }
 
             backDist -= currentSize;
             size -= currentSize;
         } while (size > 0);
 
-        return collectedSlice.toByteArray();
+        return collectedSlice;
     }
 
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */
