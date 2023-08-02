@@ -2,6 +2,7 @@ package com.github.NeRdTheNed.deft4j.deflate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
@@ -149,6 +150,16 @@ public abstract class DeflateBlock {
         long backDist = initialBackDist;
         long size = initialSize;
         assert (size > 0);
+
+        if (backDist < thisBlockSize) {
+            final long offsetFromStartOfBlock = thisBlockSize - backDist;
+            final long remainingBytesInBlock = thisBlockSize - offsetFromStartOfBlock;
+
+            if (remainingBytesInBlock >= size) {
+                return Arrays.copyOfRange(thisBlockData, (int) offsetFromStartOfBlock, (int) (offsetFromStartOfBlock + size));
+            }
+        }
+
         final ByteArrayOutputStream collectedSlice = new ByteArrayOutputStream();
 
         do {
