@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.StringJoiner;
 
 /** Static utility methods which don't require any dependencies */
@@ -39,16 +40,14 @@ public final class Util {
 
     /** Creates a new array with the contents of both arrays */
     public static int[] combine(int[] a1, int[] a2) {
-        final int[] combined = new int[a1.length + a2.length];
-        System.arraycopy(a1, 0, combined, 0, a1.length);
+        final int[] combined = Arrays.copyOf(a1, a1.length + a2.length);
         System.arraycopy(a2, 0, combined, a1.length, a2.length);
         return combined;
     }
 
     /** Creates a new array with the contents of both arrays */
     public static byte[] combine(byte[] a1, byte[] a2) {
-        final byte[] combined = new byte[a1.length + a2.length];
-        System.arraycopy(a1, 0, combined, 0, a1.length);
+        final byte[] combined = Arrays.copyOf(a1, a1.length + a2.length);
         System.arraycopy(a2, 0, combined, a1.length, a2.length);
         return combined;
     }
