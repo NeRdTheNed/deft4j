@@ -26,6 +26,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     // TODO LinkedList?
     private List<LitLen> litlens = new ArrayList<>();
+    private boolean didCopy = false;
     // Decoded data
     private boolean finishedDec = false;
     private byte[] decodedData;
@@ -189,9 +190,11 @@ public class DeflateBlockHuffman extends DeflateBlock {
      * @param print allow debug printing
      * @param prune remove matches if the length is the same as well
      */
-    private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, Huffman distDec, boolean print, String optPrefix, boolean prune) {
+    private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, Huffman distDec, boolean print, String optPrefix, boolean prune, boolean estimateOnly) {
+        print = print && !estimateOnly;
         final boolean litLen = distDec != null;
         long savedTotal = 0;
+        long seenRemove = 0;
         final ListIterator<LitLen> litIter = checkLitlens.listIterator();
         checkNext: while (litIter.hasNext()) {
             final LitLen check = litIter.next();
@@ -232,19 +235,23 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 final int saved = checkSize - totalSize;
                 assert (prune && (saved >= 0)) || (saved > 0);
                 savedTotal += saved;
-                litIter.remove();
+                seenRemove++;
 
-                for (int i = 0; i < arrSize; i++) {
-                    final byte bNeg = check.decodedVal[i];
-                    final int b = bNeg & 0xFF;
-                    final LitLen rep = new LitLen(b);
-                    rep.decodedVal = new byte[] { bNeg };
+                if (!estimateOnly) {
+                    litIter.remove();
 
-                    if (DEBUG_PRINT_OPT_REFREPLACE && print) {
-                        System.out.println(rep);
+                    for (int i = 0; i < arrSize; i++) {
+                        final byte bNeg = check.decodedVal[i];
+                        final int b = bNeg & 0xFF;
+                        final LitLen rep = new LitLen(b);
+                        rep.decodedVal = new byte[] { bNeg };
+
+                        if (DEBUG_PRINT_OPT_REFREPLACE && print) {
+                            System.out.println(rep);
+                        }
+
+                        litIter.add(rep);
                     }
-
-                    litIter.add(rep);
                 }
 
                 if (DEBUG_PRINT_OPT_REFREPLACE && print) {
@@ -253,13 +260,27 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
         }
 
+        if (estimateOnly && (savedTotal <= 0) && (seenRemove <= 0)) {
+            return -1;
+        }
+
         return savedTotal;
     }
 
+    private void ensureDidCopyLitLens() {
+        if (!didCopy) {
+            litlens = new ArrayList<>(litlens);
+            didCopy = true;
+        }
+    }
+
     private void replaceBackrefsWithLiteralsIfSmaller(boolean prune, boolean print) {
-        final long savedLitlens = replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune);
-        sizeBits -= savedLitlens;
-        litlenSizeBits -= savedLitlens;
+        if (replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune, true) >= 0) {
+            ensureDidCopyLitLens();
+            final long savedLitlens = replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune, false);
+            sizeBits -= savedLitlens;
+            litlenSizeBits -= savedLitlens;
+        }
     }
 
     private void replaceRLERunsWithLiteralsIfSmaller(boolean prune, boolean print) {
@@ -268,8 +289,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         long savedHeader = 0;
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune);
-        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune);
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsLitlen, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+        savedHeader += replaceWithLiteralsIfSmaller(rlePairsDist, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
         sizeBits -= savedHeader;
         dynamicHeaderSizeBits -= savedHeader;
     }
@@ -373,6 +394,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         if (litlenRem >= 0) {
+            ensureDidCopyLitLens();
             final ListIterator<LitLen> litIter = litlens.listIterator();
 
             while (litIter.hasNext()) {
@@ -1109,11 +1131,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
         copy(this, compressedBlock);
         compressedBlock.litlenDec = litlenDec.copy();
         compressedBlock.distDec = distDec.copy();
-
-        for (final LitLen litlen : litlens) {
+        /*for (final LitLen litlen : litlens) {
             compressedBlock.litlens.add(litlen.copy());
-        }
-
+        }*/
+        compressedBlock.litlens = litlens;
         compressedBlock.finishedDec = true;
         compressedBlock.dataPos = dataPos;
         compressedBlock.sizeBits = sizeBits;
