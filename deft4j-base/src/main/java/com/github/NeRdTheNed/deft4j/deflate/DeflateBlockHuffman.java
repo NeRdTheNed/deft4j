@@ -64,12 +64,18 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. Supports reading slices during decoding. */
     @Override
-    byte[] readSlice(long backDist, long len) {
+    byte[] readSlice(long backDist, long len, long offset) {
         if (!finishedDec) {
-            return readSlice(backDist, len, this, decodedData, (int) dataPos);
+            return readSlice(backDist, len, this, decodedData, (int) dataPos, offset);
         }
 
-        return super.readSlice(backDist, len);
+        return super.readSlice(backDist, len, offset);
+    }
+
+    /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. Supports reading slices during decoding. */
+    @Override
+    byte[] readSlice(long backDist, long len) {
+        return readSlice(backDist, len, 0);
     }
 
     private void writeTemp(byte[] vals) {

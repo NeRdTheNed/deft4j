@@ -142,11 +142,14 @@ public abstract class DeflateBlock {
     }
 
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */
-    static byte[] readSlice(final long initialBackDist, final long initialSize, final DeflateBlock thisBlock, final byte[] thisBlockData, final long thisBlockSize) {
-        assert initialBackDist <= Constants.LZZ_BACKREF_LEN;
-        final ByteArrayOutputStream collectedSlice = new ByteArrayOutputStream();
+    static byte[] readSlice(long initialBackDist, final long initialSize, final DeflateBlock thisBlock, final byte[] thisBlockData, final long thisBlockSize, final long initialBackDistOffset) {
+        assert ((initialBackDist <= Constants.LZZ_BACKREF_LEN) && (initialBackDist >= 0));
+        assert (initialBackDistOffset >= 0);
+        initialBackDist += initialBackDistOffset;
         long backDist = initialBackDist;
         long size = initialSize;
+        assert (size > 0);
+        final ByteArrayOutputStream collectedSlice = new ByteArrayOutputStream();
 
         do {
             long currentBackDist = backDist;
@@ -204,8 +207,17 @@ public abstract class DeflateBlock {
         return collectedSlice.toByteArray();
     }
 
-    byte[] readSlice(long backDist, long size) {
+    /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */
+    static byte[] readSlice(final long initialBackDist, final long initialSize, final DeflateBlock thisBlock, final byte[] thisBlockData, final long thisBlockSize) {
+        return readSlice(initialBackDist, initialSize, thisBlock, thisBlockData, thisBlockSize, 0);
+    }
+
+    byte[] readSlice(long backDist, long size, long offset) {
         final byte[] uncomData = getUncompressedData();
-        return readSlice(backDist, size, this, uncomData, uncomData.length);
+        return readSlice(backDist, size, this, uncomData, uncomData.length, offset);
+    }
+
+    byte[] readSlice(long backDist, long size) {
+        return readSlice(backDist, size, 0);
     }
 }
