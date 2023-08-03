@@ -392,6 +392,10 @@ public class DeflateStream {
                 /*addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
                 addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);*/
             };
+            final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallbackMulti = e -> {
+                callback.accept(e);
+                runOptimisationsCallback.accept(e);
+            };
             runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
             runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
 
@@ -405,9 +409,9 @@ public class DeflateStream {
                 }
             }
 
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ", position);
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
-            addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
+            addOptimisedRecoded(runOptimisationsCallbackMulti, toOptimiseHuffman, "default ", position);
+            addOptimisedRecoded(runOptimisationsCallbackMulti, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
+            addOptimisedRecoded(runOptimisationsCallbackMulti, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
             //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");
         }
 
