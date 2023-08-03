@@ -38,13 +38,18 @@ public class DeflateBlockUncompressed extends DeflateBlock {
         final int finalBlockI = finalBlock ? 1 : 0;
         os.writeNBits((0x0 << 1) | finalBlockI, 3);
         final byte[] lenNlen = new byte[4];
-        lenNlen[0] = (byte)(storedData.length >>> 0);
-        lenNlen[1] = (byte)(storedData.length >>> 8);
+        final int lenght = storedData != null ? storedData.length : 0;
+        lenNlen[0] = (byte)(lenght >>> 0);
+        lenNlen[1] = (byte)(lenght >>> 8);
         lenNlen[2] = (byte) ~lenNlen[0];
         lenNlen[3] = (byte) ~lenNlen[1];
         os.flushToByteAligned();
         os.writeBytes(lenNlen);
-        os.writeBytes(storedData);
+
+        if (storedData != null) {
+            os.writeBytes(storedData);
+        }
+
         return true;
     }
 
@@ -63,7 +68,7 @@ public class DeflateBlockUncompressed extends DeflateBlock {
     public long getSizeBits(long alginment) {
         long contributedAlignment = alginment % 8;
         contributedAlignment = contributedAlignment == 0 ? 0 : 8 - contributedAlignment;
-        return (((long) storedData.length + 4) * 8) + contributedAlignment;
+        return (((long) (storedData != null ? storedData.length : 0) + 4) * 8) + contributedAlignment;
     }
 
     @Override
