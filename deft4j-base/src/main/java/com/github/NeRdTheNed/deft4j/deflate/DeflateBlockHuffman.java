@@ -349,7 +349,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return 0;
     }
 
-    public void removeTrailingHeaderCodes(boolean print) {
+    private void removeTrailingHeaderCodes(boolean print) {
         final long savedHeader = removeDynHeaderTrailingZeroLenCodelens(print);
         sizeBits -= savedHeader;
         dynamicHeaderSizeBits -= savedHeader;
@@ -718,11 +718,11 @@ public class DeflateBlockHuffman extends DeflateBlock {
         recodeToHuffman(newLit, newDist);
     }
 
-    public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec) {
+    private void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec) {
         recodeToHuffman(newLitlenDec, newDistDec, true, true, true, false);
     }
 
-    public void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh, boolean use8, boolean use7, boolean alt8) {
+    private void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh, boolean use8, boolean use7, boolean alt8) {
         if ((newLitlenDec == Huffman.FIXED_LITLEN_INST) && (newDistDec == Huffman.FIXED_DIST_INST)) {
             recodeToFixedHuffman();
         } else {
@@ -1141,7 +1141,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     @Override
-    public byte[] getUncompressedData() {
+    byte[] getUncompressedData() {
         return decodedData;
     }
 

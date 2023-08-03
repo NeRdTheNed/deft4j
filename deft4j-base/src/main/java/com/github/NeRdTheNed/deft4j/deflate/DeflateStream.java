@@ -33,7 +33,7 @@ public class DeflateStream {
 
     /** Returns debug information about each block */
     public String printBlockInfo() {
-        DeflateBlock currentBlock = getFirstBlock();
+        DeflateBlock currentBlock = firstBlock;
         long pos = 0;
         int block = 0;
         final StringBuilder blockStats = new StringBuilder();
@@ -127,7 +127,7 @@ public class DeflateStream {
 
     public boolean write(OutputStream os) throws IOException {
         final BitOutputStream bos = new BitOutputStream(os);
-        DeflateBlock currentBlock = getFirstBlock();
+        DeflateBlock currentBlock = firstBlock;
 
         while (currentBlock != null) {
             final DeflateBlock nextBlock = currentBlock.getNext();
@@ -158,7 +158,7 @@ public class DeflateStream {
 
     public byte[] getUncompressedData() throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflateBlock currentBlock = getFirstBlock();
+        DeflateBlock currentBlock = firstBlock;
 
         while (currentBlock != null) {
             baos.write(currentBlock.getUncompressedData());
@@ -170,7 +170,7 @@ public class DeflateStream {
 
     public long getSizeBits() {
         long size = 0;
-        DeflateBlock currentBlock = getFirstBlock();
+        DeflateBlock currentBlock = firstBlock;
 
         while (currentBlock != null) {
             size += 3;
@@ -420,7 +420,7 @@ public class DeflateStream {
         long pos = 0;
         long saved = 0;
         boolean first = true;
-        DeflateBlock currentBlock = getFirstBlock();
+        DeflateBlock currentBlock = firstBlock;
 
         while (currentBlock != null) {
             boolean finishPass = true;

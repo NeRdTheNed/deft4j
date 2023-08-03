@@ -8,16 +8,16 @@ import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 
 public abstract class DeflateBlock {
     static DeflateBlock copy(DeflateBlock old, DeflateBlock newBlock) {
-        final DeflateBlock prev = old.getPrevious();
+        final DeflateBlock prev = old.prevBlock;
 
         if (prev != null) {
-            newBlock.setPrevious(prev);
+            newBlock.prevBlock = prev;
         }
 
-        final DeflateBlock next = old.getNext();
+        final DeflateBlock next = old.nextBlock;
 
         if (next != null) {
-            newBlock.setNext(next);
+            newBlock.nextBlock = next;
         }
 
         return newBlock;
@@ -32,26 +32,26 @@ public abstract class DeflateBlock {
     abstract byte[] getUncompressedData();
     public abstract long getSizeBits(long alginment);
     public void discard() {
-        final DeflateBlock prev = getPrevious();
+        final DeflateBlock prev = prevBlock;
 
-        if ((prev != null) && (prev.getNext() == this)) {
-            prev.setNext(null);
+        if ((prev != null) && (prev.nextBlock == this)) {
+            prev.nextBlock = null;
         }
 
-        final DeflateBlock next = getNext();
+        final DeflateBlock next = nextBlock;
 
-        if ((next != null) && (next.getPrevious() == this)) {
-            next.setPrevious(null);
+        if ((next != null) && (next.prevBlock == this)) {
+            next.prevBlock = null;
         }
 
-        setNext(null);
-        setPrevious(null);
+        nextBlock = null;
+        prevBlock = null;
     }
 
     public DeflateBlockUncompressed asUncompressed() {
         if (getDeflateBlockType() != DeflateBlockType.STORED) {
-            final DeflateBlockUncompressed newUncom = new DeflateBlockUncompressed(getPrevious());
-            newUncom.setNext(getNext());
+            final DeflateBlockUncompressed newUncom = new DeflateBlockUncompressed(prevBlock);
+            newUncom.setNext(nextBlock);
             newUncom.fromUncompressed(getUncompressedData());
             return newUncom;
         }
@@ -62,7 +62,7 @@ public abstract class DeflateBlock {
     private DeflateBlock prevBlock;
     private DeflateBlock nextBlock;
 
-    public DeflateBlock getPrevious() {
+    DeflateBlock getPrevious() {
         return prevBlock;
     }
 
@@ -78,7 +78,7 @@ public abstract class DeflateBlock {
         nextBlock = block;
     }
 
-    DeflateBlock(DeflateBlock prevBlock, DeflateBlock nextBlock) {
+    private DeflateBlock(DeflateBlock prevBlock, DeflateBlock nextBlock) {
         this.prevBlock = prevBlock;
         this.nextBlock = nextBlock;
     }
@@ -89,53 +89,53 @@ public abstract class DeflateBlock {
 
     public void replace(DeflateBlock replacement) {
         if (prevBlock != null) {
-            prevBlock.setNext(replacement);
+            prevBlock.nextBlock = replacement;
         }
 
         if (nextBlock != null) {
-            nextBlock.setPrevious(replacement);
+            nextBlock.prevBlock = replacement;
         }
     }
 
     public void replace(DeflateBlock prev, DeflateBlock next) {
         if (prevBlock != null) {
-            prevBlock.setNext(prev);
+            prevBlock.nextBlock = prev;
         }
 
         if (nextBlock != null) {
-            nextBlock.setPrevious(next);
+            nextBlock.prevBlock = next;
         }
     }
 
     public void insertNext(DeflateBlock block) {
-        block.setPrevious(this);
+        block.prevBlock = this;
 
         if (nextBlock != null) {
-            block.setNext(nextBlock);
-            nextBlock.setPrevious(block);
+            block.nextBlock = nextBlock;
+            nextBlock.prevBlock = block;
         }
 
-        setNext(block);
+        nextBlock = block;
     }
 
     public void insertPrev(DeflateBlock block) {
-        block.setNext(this);
+        block.nextBlock = this;
 
         if (prevBlock != null) {
-            block.setPrevious(prevBlock);
-            prevBlock.setNext(block);
+            block.prevBlock = prevBlock;
+            prevBlock.nextBlock = block;
         }
 
-        setPrevious(block);
+        prevBlock = block;
     }
 
     public void remove() {
         if (prevBlock != null) {
-            prevBlock.setNext(nextBlock);
+            prevBlock.nextBlock = nextBlock;
         }
 
         if (nextBlock != null) {
-            nextBlock.setPrevious(prevBlock);
+            nextBlock.prevBlock = prevBlock;
         }
 
         discard();
@@ -173,7 +173,7 @@ public abstract class DeflateBlock {
             while (currentBackDist > currentBlockSize) {
                 currentBackDist -= currentBlockSize;
                 currentSize -= currentBlockSize;
-                currentBlock = currentBlock.getPrevious();
+                currentBlock = currentBlock.prevBlock;
                 assert currentBlock != null;
                 currentBlockData = currentBlock.getUncompressedData();
                 currentBlockSize = currentBlockData.length;
