@@ -245,7 +245,7 @@ public class DeflateStream {
     private static final boolean DEFAULT_8 = false;
     private static final boolean ALT_8 = !DEFAULT_8;
 
-    private static void addOptimisedRecoded(Consumer<Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
+    private static void addOptimisedRecoded(Consumer<? super Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(toOptimise, baseName);
         blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
