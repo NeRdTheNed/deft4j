@@ -164,6 +164,34 @@ public class DeflateBlockHuffman extends DeflateBlock {
         return encodedSize;
     }
 
+    private static byte[] getRLEPairSlice(LitLen rlePair, LitLen prev) {
+        if (rlePair.dist <= 0) {
+            return new byte[] { (byte) rlePair.litlen };
+        }
+
+        final byte[] slice = new byte[(int) rlePair.dist];
+
+        switch ((int) rlePair.litlen) {
+        case Constants.CODELEN_COPY: {
+            assert (prev != null);
+            Arrays.fill(slice, (byte) prev.litlen);
+            break;
+        }
+
+        case Constants.CODELEN_ZEROS:
+        case Constants.CODELEN_ZEROS2: {
+            //Arrays.fill(slice, (byte)0);
+            break;
+        }
+
+        default:
+            // Invalid symbol
+            throw new RuntimeException("Invalid RLE symbol when reading encoded dynamic header pair");
+        }
+
+        return slice;
+    }
+
     // Debug print flags
     private static final boolean DEBUG_PRINT_OPT = Deft.PRINT_OPT_FINER;
     private static final boolean DEBUG_PRINT_OPT_REFREPLACE = DEBUG_PRINT_OPT;
