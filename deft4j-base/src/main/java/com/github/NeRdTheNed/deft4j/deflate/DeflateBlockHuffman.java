@@ -857,11 +857,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
 
             readLen.decodedVal = readSlice(dist, len);
-
-            if (litlens.contains(readLen)) {
+            /*if (litlens.contains(readLen)) {
                 readLen.decodedVal = litlens.get(litlens.indexOf(readLen)).decodedVal;
-            }
-
+            }*/
             litlens.add(readLen);
             writeTemp(readLen.decodedVal);
 
