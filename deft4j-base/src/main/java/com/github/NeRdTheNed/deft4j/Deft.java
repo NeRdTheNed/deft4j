@@ -29,7 +29,7 @@ public class Deft {
     }
 
     /** Get the size of a raw deflate stream, in bits. Throws an IOException if it can't be parsed */
-    public static long getSizeBits(byte[] deflateStream) throws IOException {
+    private static long getSizeBits(byte[] deflateStream) throws IOException {
         final DeflateStream stream = new DeflateStream();
 
         if (!stream.parse(deflateStream)) {

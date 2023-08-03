@@ -6,6 +6,6 @@ public enum DeflateBlockType {
     DYNAMIC;
 
     public static DeflateBlockType fromInt(int i) {
-        return DeflateBlockType.values()[i];
+        return values()[i];
     }
 }

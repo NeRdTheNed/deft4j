@@ -12,9 +12,9 @@ public class BitInputStream implements Closeable {
     private long pos;
 
     private long accum;
-    private int bitpos = 0;
+    private int bitpos;
 
-    private boolean eof = false;
+    private boolean eof;
 
     public BitInputStream(InputStream is) {
         this.is = is;
@@ -36,7 +36,7 @@ public class BitInputStream implements Closeable {
         return toReturn;
     }
 
-    public long readBit() throws IOException {
+    private long readBit() throws IOException {
         if (eof) {
             return -1;
         }

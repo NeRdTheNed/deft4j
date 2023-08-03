@@ -28,7 +28,7 @@ public class BitOutputStream implements Closeable {
         pos += bytes.length;
     }
 
-    public void writeBit(int bit) throws IOException {
+    private void writeBit(int bit) throws IOException {
         accum |= (bit & 1) << (ALIGN - 1 - --bitpos);
 
         if (bitpos == 0) {
@@ -44,7 +44,7 @@ public class BitOutputStream implements Closeable {
         }
     }
 
-    public void writeByte(int b) throws IOException {
+    private void writeByte(int b) throws IOException {
         if (bitpos != ALIGN) {
             writeNBits(b & 0xFF, 8);
         } else {

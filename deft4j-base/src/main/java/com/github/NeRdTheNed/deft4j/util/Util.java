@@ -66,9 +66,9 @@ public final class Util {
     }
 
     /** Returns the extension of this file, or an empty String if it doesn't have one */
-    public static String getFileExtension(File file) {
+    private static String getFileExtension(File file) {
         final String name = file.getName();
-        final int extLocation = name.lastIndexOf(".");
+        final int extLocation = name.lastIndexOf('.');
         return extLocation > 0 ? name.substring(extLocation) : "";
     }
 
@@ -83,14 +83,14 @@ public final class Util {
     }
 
     /** Rough "is printable character" check */
-    public static boolean isPrintable(char value) {
-        return !Character.isISOControl(value) && (Character.isLetterOrDigit(value) || Character.isWhitespace(value) || Character.isValidCodePoint(value));
+    private static boolean isPrintable(char value) {
+        return !Character.isISOControl(value);
     }
 
     /** Gets n least significant bits */
     public static long lsb(long x, int n) {
         assert n <= 63;
-        return x & (((long)1 << n) - 1);
+        return x & ((1L << n) - 1);
     }
 
     /** Gets a printable string representation of a character array similar to Arrays.toString */
@@ -110,9 +110,9 @@ public final class Util {
     }
 
     /** Gets a printable string representation of a character */
-    public static String printableStr(char value) {
+    private static String printableStr(char value) {
         if (isPrintable(value)) {
-            return "\'" + value + "\'";
+            return "'" + value + "'";
         }
 
         return binStr(value);
@@ -148,7 +148,7 @@ public final class Util {
             read = is.read();
         }
 
-        return new String(boas.toByteArray());
+        return boas.toString();
     }
 
     /** Reverses n bits, truncating */
@@ -172,8 +172,9 @@ public final class Util {
     /** C-style-ish strlen */
     public static int strlen(byte[] arr, int offset) {
         int i;
+        final int arrLen = arr.length;
 
-        for (i = offset; (i < arr.length) && (arr[i] != 0); i++) {
+        for (i = offset; (i < arrLen) && (arr[i] != 0); i++) {
             // This space left intentionally blank
         }
 
@@ -181,7 +182,7 @@ public final class Util {
     }
 
     /** Writes a byte array to a file */
-    public static boolean writeFile(File file, byte[] bytes) {
+    private static boolean writeFile(File file, byte[] bytes) {
         try {
             Files.write(file.toPath(), bytes);
             return true;

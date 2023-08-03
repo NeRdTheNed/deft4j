@@ -2,10 +2,10 @@ package com.github.NeRdTheNed.deft4j.huffman;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -36,11 +36,11 @@ public class Huffman {
         final int n = codeLen.length;
         final int[] codes = new int[n];
         // Find used codelengths
-        final Set<Integer> lengthSet = new TreeSet<>();
+        final Collection<Integer> lengthSet = new TreeSet<>();
 
-        for (int i = 0; i < n; i++) {
-            if (codeLen[i] > 0) {
-                lengthSet.add(codeLen[i]);
+        for (final int j : codeLen) {
+            if (j > 0) {
+                lengthSet.add(j);
             }
         }
 
@@ -97,8 +97,9 @@ public class Huffman {
     public Huffman(HuffmanTable table) {
         this.table = table;
         codes = new ArrayList<>();
+        final int len = this.table.code.length;
 
-        for (int i = 0; i < this.table.code.length; i++) {
+        for (int i = 0; i < len; i++) {
             // Janky hack mate!
             // If this is 0, then it replaces the code 0.
             int element = -1;
@@ -113,7 +114,7 @@ public class Huffman {
         codeMap = buildCodeMap(codes, this.table.codeLen);
     }
 
-    public static Huffman ofRLEPacked(List<Integer> lengths) {
+    public static Huffman ofRLEPacked(Iterable<Integer> lengths) {
         final int[] lenFreq = new int[Constants.MAX_CODELEN_LENS];
         final Iterator<Integer> iter = lengths.iterator();
 
@@ -149,11 +150,11 @@ public class Huffman {
     }
 
     public static class DecodedSym {
-        public final int code;
+        final int code;
         public final int codeLen;
         public final int decoded;
 
-        public DecodedSym(int code, int codeLen, int decoded) {
+        DecodedSym(int code, int codeLen, int decoded) {
             this.code = code;
             this.codeLen = codeLen;
             this.decoded = decoded;
@@ -166,7 +167,7 @@ public class Huffman {
      * @param codeMap The code map to use
      * @return The decoded symbol
      */
-    public static DecodedSym readSymbol(List<Integer> codes, Map<Integer, List<Integer>> codeMap, BitInputStream is) throws IOException {
+    private static DecodedSym readSymbol(List<Integer> codes, Map<Integer, List<Integer>> codeMap, BitInputStream is) throws IOException {
         int code = 0;
         int codeLen = 0;
         int index = -1;

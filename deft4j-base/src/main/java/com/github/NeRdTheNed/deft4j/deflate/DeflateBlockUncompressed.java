@@ -7,7 +7,7 @@ import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 import com.github.NeRdTheNed.deft4j.util.BitInputStreamUtil;
 
 public class DeflateBlockUncompressed extends DeflateBlock {
-    byte[] storedData;
+    private byte[] storedData;
 
     public DeflateBlockUncompressed(DeflateBlock prevBlock) {
         super(prevBlock);
@@ -21,7 +21,8 @@ public class DeflateBlockUncompressed extends DeflateBlock {
     @Override
     public boolean parse(BitInputStream is) throws IOException {
         is.readToByteAligned();
-        long len, nlen;
+        final long len;
+        final long nlen;
         len  = is.readBits(16) & 0xffff;
         nlen = is.readBits(16) & 0xffff;
 
@@ -36,10 +37,10 @@ public class DeflateBlockUncompressed extends DeflateBlock {
     @Override
     public boolean write(BitOutputStream os, boolean finalBlock) throws IOException {
         final int finalBlockI = finalBlock ? 1 : 0;
-        os.writeNBits((0x0 << 1) | finalBlockI, 3);
+        os.writeNBits(finalBlockI, 3);
         final byte[] lenNlen = new byte[4];
         final int lenght = storedData != null ? storedData.length : 0;
-        lenNlen[0] = (byte)(lenght >>> 0);
+        lenNlen[0] = (byte)(lenght);
         lenNlen[1] = (byte)(lenght >>> 8);
         lenNlen[2] = (byte) ~lenNlen[0];
         lenNlen[3] = (byte) ~lenNlen[1];

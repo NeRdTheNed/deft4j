@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 
-public class BitInputStreamUtil {
+public final class BitInputStreamUtil {
     /** Private constructor to hide the default one */
     private BitInputStreamUtil() {
         // This space left intentionally blank

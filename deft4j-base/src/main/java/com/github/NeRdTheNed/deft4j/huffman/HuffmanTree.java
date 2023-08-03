@@ -1,7 +1,7 @@
 package com.github.NeRdTheNed.deft4j.huffman;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,11 +27,6 @@ public class HuffmanTree {
      * The maximum depth of the tree.
      */
     private int maxDepth;
-
-    /**
-     * The root node.
-     */
-    private final Node root;
 
     /**
      * Construct a Huffman tree from the given frequencies.
@@ -71,7 +66,8 @@ public class HuffmanTree {
             queue.add(new InternalNode(left, right));
         }
 
-        root = queue.remove();
+        // The root node
+        final Node root = queue.remove();
         // Build the depth map
         traverse(root);
 
@@ -79,7 +75,7 @@ public class HuffmanTree {
         while (maxDepth > limit) {
             final LeafNode leafA = depthMap.get(maxDepth).get(0);                // Pick a leaf over the limit
             final InternalNode parent1 = (InternalNode) leafA.parent;            // Go up one node
-            LeafNode leafB;                                                // Examine the opposite leaf
+            final LeafNode leafB;                                                // Examine the opposite leaf
 
             if (leafA.side == 0) {
                 leafB = (LeafNode) parent1.right;
@@ -157,11 +153,7 @@ public class HuffmanTree {
             traverse(((InternalNode) node).left, depth + 1);
             traverse(((InternalNode) node).right, depth + 1);
         } else if (node instanceof LeafNode) {
-            if (depthMap.get(depth) == null) {
-                depthMap.put(depth, new ArrayList<>());
-            }
-
-            depthMap.get(depth).add((LeafNode) node);
+            depthMap.computeIfAbsent(depth, k -> new ArrayList<>()).add((LeafNode) node);
         }
     }
 
@@ -183,7 +175,7 @@ public class HuffmanTree {
             lastShift = length;
             // Sort leaves by value
             final List<LeafNode> leaves = entry.getValue();
-            Collections.sort(leaves, (n1, n2) -> n1.value - n2.value);
+            leaves.sort(Comparator.comparingInt(n -> n.value));
 
             // Assign codes to leaves
             for (final LeafNode leaf : leaves) {
@@ -199,21 +191,21 @@ public class HuffmanTree {
     /**
      * A node.
      */
-    abstract class Node implements Comparable<Node> {
+    abstract static class Node implements Comparable<Node> {
         /**
          * The parent of this node.
          */
-        public Node parent;
+        Node parent;
 
         /**
          * The side of this node (with respect to the parent).
          */
-        public int side;
+        int side;
 
         /**
          * The weight of this node.
          */
-        public int weight;
+        int weight;
 
         /**
          * Compare this node with another node.
@@ -229,23 +221,23 @@ public class HuffmanTree {
     /**
      * An internal node.
      */
-    class InternalNode extends Node {
+    static class InternalNode extends Node {
         /**
          * The left node.
          */
-        public Node left;
+        Node left;
 
         /**
          * The right node.
          */
-        public Node right;
+        Node right;
 
         /**
          * Create a new internal node.
          * @param left The left node
          * @param right The right node
          */
-        public InternalNode(Node left, Node right) {
+        InternalNode(Node left, Node right) {
             left.parent = this;
             left.side = 0;
             this.left = left;
@@ -264,18 +256,18 @@ public class HuffmanTree {
     /**
      * A leaf node.
      */
-    class LeafNode extends Node {
+    static class LeafNode extends Node {
         /**
          * The value of this node.
          */
-        public int value;
+        final int value;
 
         /**
          * Create a new leaf node.
          * @param value The value
          * @param weight The weight
          */
-        public LeafNode(int value, int weight) {
+        LeafNode(int value, int weight) {
             this.value = value;
             this.weight = weight;
         }

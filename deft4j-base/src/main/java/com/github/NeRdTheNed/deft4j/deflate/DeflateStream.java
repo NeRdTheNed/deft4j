@@ -47,8 +47,7 @@ public class DeflateStream {
             currentBlock = currentBlock.getNext();
         }
 
-        final StringBuilder sb = new StringBuilder().append("Stream name: ").append(getName()).append("\nBlock info:").append(blockStats).append("\nTotal blocks: ").append(block);
-        return sb.toString();
+        return "Stream name: " + name + "\nBlock info:" + blockStats + "\nTotal blocks: " + block;
     }
 
     public String getName() {
@@ -61,7 +60,7 @@ public class DeflateStream {
 
     private DeflateBlock firstBlock;
 
-    public boolean parse(long dataLength, byte[] data, int offset) throws IOException {
+    private boolean parse(long dataLength, byte[] data, int offset) throws IOException {
         final ByteArrayInputStream bais = new ByteArrayInputStream(data, offset, (int) dataLength);
         return parse(bais);
     }
@@ -83,7 +82,7 @@ public class DeflateStream {
             pos += 3;
             bfinal = (bits & 1) != 0;
             bits >>>= 1;
-            DeflateBlock newBlock;
+            final DeflateBlock newBlock;
 
             switch ((int) bits) {
             case 0b00:
@@ -211,7 +210,7 @@ public class DeflateStream {
     }
 
     private static DeflateBlockHuffman recodedHuffmanFull(DeflateBlockHuffman block, long align) {
-        DeflateBlockHuffman check = null;
+        DeflateBlockHuffman check;
         long prevSize = block.getSizeBits(align);
 
         while (true) {
@@ -327,10 +326,9 @@ public class DeflateStream {
                     System.out.println("Candidate " + e.v + " saved " + (currentSmallestPair.v - newSizeBits) + " bits");
                 }
 
-                if (currentSmallestPair.k != toOptimise) {
-                    //currentSmallestPair.k.discard();
-                }
-
+                /*if (currentSmallestPair.k != toOptimise) {
+                    currentSmallestPair.k.discard();
+                }*/
                 currentSmallestPair.k = candidate;
                 currentSmallestPair.v = newSizeBits;
             }
@@ -353,7 +351,7 @@ public class DeflateStream {
             toOptimiseHuffman = (DeflateBlockHuffman) toOptimise;
             optimisedHuffman = (DeflateBlockHuffman) optimised;
         } else if (isOrigFixed) {
-            toOptimiseHuffman = (DeflateBlockHuffman) ((DeflateBlockHuffman) toOptimise).copy();
+            toOptimiseHuffman = (DeflateBlockHuffman) toOptimise.copy();
             toOptimiseHuffman.recodeHuffman();
             optimisedHuffman = (DeflateBlockHuffman) toOptimiseHuffman.copy();
             optimisedHuffman.optimise();
@@ -374,7 +372,7 @@ public class DeflateStream {
                 post.recodeHeader();
                 callback.accept(new Pair<>(post, namePost));
                 callback.accept(new Pair<>(optimiseBlockNormal(post), namePost + " optimised"));
-                addOptimisedRecoded(callback::accept, post, namePost + " ", position);
+                addOptimisedRecoded(callback, post, namePost + " ", position);
 
                 // RLE pruned header
                 final String namePrune = toFixed.v + " pruned";
@@ -382,15 +380,15 @@ public class DeflateStream {
                 prune.recodeHeaderToLessRLEMatches();
                 callback.accept(new Pair<>(prune, namePrune));
                 callback.accept(new Pair<>(optimiseBlockNormal(prune), namePrune + " optimised"));
-                addOptimisedRecoded(callback::accept, prune, namePrune + " ", position);
+                addOptimisedRecoded(callback, prune, namePrune + " ", position);
 
                 // Least-expensive dist litlen pruned
-                addOptimisedRecoded(callback::accept, leastExpPruned(toFixed.k), toFixed.v + "-least-exp ", position);
+                addOptimisedRecoded(callback, leastExpPruned(toFixed.k), toFixed.v + "-least-exp ", position);
                 /*addOptimisedRecoded(callback::accept, leastExpPruned(post), namePost + "-least-exp ", position);
                 addOptimisedRecoded(callback::accept, leastExpPruned(prune), namePrune + "-least-exp ", position);*/
 
                 // Least-seen dist litlen pruned
-                addOptimisedRecoded(callback::accept, leastSeenPruned(toFixed.k), toFixed.v + "-least-seen ", position);
+                addOptimisedRecoded(callback, leastSeenPruned(toFixed.k), toFixed.v + "-least-seen ", position);
                 /*addOptimisedRecoded(callback::accept, leastSeenPruned(post), namePost + "-least-seen ", position);
                 addOptimisedRecoded(callback::accept, leastSeenPruned(prune), namePrune + "-least-seen ", position);*/
             };
