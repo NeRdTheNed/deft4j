@@ -1,7 +1,5 @@
 package com.github.NeRdTheNed.deft4j.util.compression;
 
-import java.io.IOException;
-
 /** Compressor that outputs data as a type 0 block */
 public class Type0Compressor implements Compressor {
     /**
@@ -14,7 +12,7 @@ public class Type0Compressor implements Compressor {
      * @return stored deflate stream from the given input
      */
     @Override
-    public byte[] compress(byte[] uncompressedData) throws IOException {
+    public byte[] compress(byte[] uncompressedData) {
         final byte[] type0Block = new byte[uncompressedData.length + 5];
         // Block type 0 | final
         type0Block[0] = 0x01;

@@ -32,7 +32,7 @@ public class JZLibCompressor implements Compressor {
         jzlibCompressor.params(JZlib.Z_BEST_COMPRESSION, strategy);
 
         try
-            (DeflaterOutputStream dos = new DeflaterOutputStream(bos, jzlibCompressor)) {
+            (final DeflaterOutputStream dos = new DeflaterOutputStream(bos, jzlibCompressor)) {
             dos.write(uncompressedData);
         }
 

@@ -82,7 +82,7 @@ public interface DeflateFilesContainer {
             sb.append("Stream ").append(defStream).append('\n').append(getStreamInfo(stream));
         }
 
-        sb.append("\nTotal streams: " + defStream);
+        sb.append("\nTotal streams: ").append(defStream);
         return sb.toString();
     }
 

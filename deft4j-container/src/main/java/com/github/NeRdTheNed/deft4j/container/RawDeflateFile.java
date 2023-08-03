@@ -9,11 +9,11 @@ import java.util.List;
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 
 public class RawDeflateFile implements DeflateFilesContainer {
-    DeflateStream deflateStream;
+    private DeflateStream deflateStream;
 
     @Override
     public List<DeflateStream> getDeflateStreams() {
-        final ArrayList<DeflateStream> fileList = new ArrayList<>();
+        final List<DeflateStream> fileList = new ArrayList<>();
         fileList.add(deflateStream);
         return fileList;
     }

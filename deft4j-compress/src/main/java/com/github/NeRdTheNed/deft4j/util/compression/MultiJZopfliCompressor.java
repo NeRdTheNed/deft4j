@@ -59,7 +59,7 @@ public class MultiJZopfliCompressor implements MultiCompressor<ZopfliOptions> {
         return jzopfliOptionsList.toArray(new ZopfliOptions[0]);
     }
 
-    MultiJZopfliCompressor(ZopfliOptions[] options) {
+    private MultiJZopfliCompressor(ZopfliOptions[] options) {
         this.options = options;
     }
 
@@ -100,7 +100,7 @@ public class MultiJZopfliCompressor implements MultiCompressor<ZopfliOptions> {
      * @return compressed data
      */
     @Override
-    public byte[] compressWithOptions(byte[] uncompressedData, ZopfliOptions jzOptions) throws IOException {
+    public byte[] compressWithOptions(byte[] uncompressedData, ZopfliOptions jzOptions) {
         final byte[][] compressedData = {{ 0 }};
         final int[] outputSize = {0};
         ZopfliCompress(jzOptions, ZopfliFormat.ZOPFLI_FORMAT_DEFLATE, uncompressedData, uncompressedData.length, compressedData, outputSize);

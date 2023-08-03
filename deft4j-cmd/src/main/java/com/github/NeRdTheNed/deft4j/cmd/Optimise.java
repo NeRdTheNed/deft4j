@@ -11,7 +11,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "optimise", mixinStandardHelpOptions = true, description = "Deflate stream optimiser")
-public class Optimise implements Callable<Integer> {
+class Optimise implements Callable<Integer> {
     @Parameters(index = "0", description = "The file to optimise")
     private Path inputFile;
 
@@ -30,7 +30,7 @@ public class Optimise implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         final CMDUtil deft = new CMDUtil(recompressMode);
-        boolean didOpt = false;
+        final boolean didOpt;
 
         try {
             didOpt = deft.optimiseFile(inputFile, outputFile, format, raw);

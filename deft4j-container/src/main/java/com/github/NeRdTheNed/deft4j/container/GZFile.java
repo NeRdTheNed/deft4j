@@ -17,26 +17,26 @@ public class GZFile implements DeflateFilesContainer {
     private static final int FNAME    = 0b01000;
     private static final int FCOMMENT = 0b10000;
 
-    public class GZipExtraFormat {
+    static class GZipExtraFormat {
         int xlength;
         byte[] data;
     }
 
-    int compressionMethod;
-    int flags;
-    long time;
-    int extraFlags;
-    int os;
+    private int compressionMethod;
+    private int flags;
+    private long time;
+    private int extraFlags;
+    private int os;
 
-    GZipExtraFormat extra;
+    private GZipExtraFormat extra;
     private String filename;
-    String comment;
-    int crc16;
+    private String comment;
+    private int crc16;
 
-    DeflateStream deflateStream;
+    private DeflateStream deflateStream;
 
-    long crc32;
-    long isize;
+    private long crc32;
+    private long isize;
 
     @Override
     public boolean read(InputStream is) throws IOException {
@@ -109,7 +109,7 @@ public class GZFile implements DeflateFilesContainer {
         }
 
         if ((flags & FNAME) != 0) {
-            os.write(getFilename().getBytes());
+            os.write(filename.getBytes());
             os.write(0);
         }
 
@@ -179,7 +179,7 @@ public class GZFile implements DeflateFilesContainer {
 
     @Override
     public List<DeflateStream> getDeflateStreams() {
-        final ArrayList<DeflateStream> fileList = new ArrayList<>();
+        final List<DeflateStream> fileList = new ArrayList<>();
         fileList.add(deflateStream);
         return fileList;
     }

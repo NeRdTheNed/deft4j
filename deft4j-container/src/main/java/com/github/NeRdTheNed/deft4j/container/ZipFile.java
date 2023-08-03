@@ -20,6 +20,7 @@ import software.coley.lljzip.format.compression.ZipCompressions;
 import software.coley.lljzip.format.model.CentralDirectoryFileHeader;
 import software.coley.lljzip.format.model.LocalFileHeader;
 import software.coley.lljzip.format.model.ZipArchive;
+import software.coley.lljzip.format.write.ZipWriter;
 import software.coley.lljzip.util.BufferData;
 import software.coley.lljzip.util.ByteDataUtil;
 
@@ -72,7 +73,7 @@ public class ZipFile implements DeflateFilesContainer {
     @Override
     public boolean write(OutputStream os) throws IOException {
         syncStreams();
-        final RecalculatingZipWriter writer = new RecalculatingZipWriter();
+        final ZipWriter writer = new RecalculatingZipWriter();
         writer.write(archive, os);
         return true;
     }

@@ -14,39 +14,39 @@ import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
 public class PNGFile implements DeflateFilesContainer {
-    public class PNGChunk {
-        byte[] type = new byte[4];
+    class PNGChunk {
+        final byte[] type = new byte[4];
         byte[] data;
 
-        public boolean isIDAT() {
+        boolean isIDAT() {
             return (type[0] == 'I') && (type[1] == 'D') && (type[2] == 'A') && (type[3] == 'T');
         }
 
-        public boolean isIEND() {
+        boolean isIEND() {
             return (type[0] == 'I') && (type[1] == 'E') && (type[2] == 'N') && (type[3] == 'D');
         }
 
-        public boolean iszTXt() {
+        boolean iszTXt() {
             return (type[0] == 'z') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
         }
 
-        public boolean isiCCP() {
+        boolean isiCCP() {
             return (type[0] == 'i') && (type[1] == 'C') && (type[2] == 'C') && (type[3] == 'P');
         }
 
-        public boolean isiTXt() {
+        boolean isiTXt() {
             return (type[0] == 'i') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
         }
 
-        public boolean isZLibCompressedNonIdat() {
+        boolean isZLibCompressedNonIdat() {
             return iszTXt() || isiCCP() || isiTXt();
         }
 
-        public String type() {
+        String type() {
             return new String(type);
         }
 
-        public byte[] getZLibCompressedNonIdat() {
+        byte[] getZLibCompressedNonIdat() {
             final boolean isiTXt = isiTXt();
 
             if (isiTXt || iszTXt() || isiCCP()) {
@@ -80,7 +80,7 @@ public class PNGFile implements DeflateFilesContainer {
             return null;
         }
 
-        public void setZLibCompressedNonIdat(byte[] newZLibData) {
+        void setZLibCompressedNonIdat(byte[] newZLibData) {
             final boolean isiTXt = isiTXt();
 
             if (isiTXt || iszTXt() || isiCCP()) {
@@ -103,7 +103,7 @@ public class PNGFile implements DeflateFilesContainer {
             assert(!isZLibCompressedNonIdat());
         }
 
-        public boolean write(OutputStream os) throws IOException {
+        boolean write(OutputStream os) throws IOException {
             Util.writeIntBE(os, data.length);
             os.write(type);
 
@@ -125,7 +125,7 @@ public class PNGFile implements DeflateFilesContainer {
 
         private static final boolean PRINT_CHUNK_INFO = false;
 
-        public boolean read(InputStream is) throws IOException {
+        boolean read(InputStream is) throws IOException {
             if (PRINT_CHUNK_INFO) {
                 System.out.println("PNG chunk:");
             }
@@ -222,7 +222,7 @@ public class PNGFile implements DeflateFilesContainer {
     }
 
     // TODO Support other deflate compressed chunks (zTXt ect)
-    ZLibFile idat;
+    private ZLibFile idat;
 
     private Map<PNGChunk, DeflateFilesContainer> deflateStreamMapNonIDAT;
 

@@ -3,6 +3,7 @@ package com.github.NeRdTheNed.deft4j.util.compression;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -71,13 +72,13 @@ public class CompressionUtil {
         return compressorsList.toArray(new Compressor[0]);
     }
 
-    public CompressionUtil(Compressor[] compressors, boolean useDeft, boolean compareDeft) {
+    private CompressionUtil(Compressor[] compressors, boolean useDeft, boolean compareDeft) {
         this.compressors = compressors;
         this.useDeft = useDeft;
         this.compareDeft = compareDeft;
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
+    private CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
         this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft, compareDeft);
     }
 
@@ -97,7 +98,7 @@ public class CompressionUtil {
         long currentSizeBits = Long.MAX_VALUE;
 
         if (threaded) {
-            final ExecutorCompletionService<byte[]> compService = new ExecutorCompletionService<>(execService.get());
+            final CompletionService<byte[]> compService = new ExecutorCompletionService<>(execService.get());
             int tasks = 0;
 
             for (final Compressor compressor : compressors) {

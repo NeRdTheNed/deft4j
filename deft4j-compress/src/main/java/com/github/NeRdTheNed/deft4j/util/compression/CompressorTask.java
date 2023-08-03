@@ -2,7 +2,7 @@ package com.github.NeRdTheNed.deft4j.util.compression;
 
 import java.util.concurrent.Callable;
 
-public class CompressorTask implements Callable<byte[]> {
+class CompressorTask implements Callable<byte[]> {
 
     private final Compressor compressor;
     private final byte[] uncompressedData;

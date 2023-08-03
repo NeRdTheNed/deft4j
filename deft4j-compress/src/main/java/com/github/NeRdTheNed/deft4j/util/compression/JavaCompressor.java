@@ -8,13 +8,13 @@ public class JavaCompressor implements Compressor {
     /** Cached deflater */
     private final Deflater jvmCompressor;
 
-    public JavaCompressor(Deflater jvmCompressor, int strategy) {
+    private JavaCompressor(Deflater jvmCompressor, int strategy) {
         this.jvmCompressor = jvmCompressor;
         jvmCompressor.setLevel(Deflater.BEST_COMPRESSION);
         jvmCompressor.setStrategy(strategy);
     }
 
-    public JavaCompressor(Deflater jvmCompressor) {
+    private JavaCompressor(Deflater jvmCompressor) {
         this(jvmCompressor, Deflater.DEFAULT_STRATEGY);
     }
 

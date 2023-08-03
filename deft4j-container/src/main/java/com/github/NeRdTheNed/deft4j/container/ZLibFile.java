@@ -16,11 +16,11 @@ public class ZLibFile implements DeflateFilesContainer {
     private int CMF;
     private int FLG;
 
-    long adler32;
+    private long adler32;
 
     @Override
     public List<DeflateStream> getDeflateStreams() {
-        final ArrayList<DeflateStream> fileList = new ArrayList<>();
+        final List<DeflateStream> fileList = new ArrayList<>();
         fileList.add(deflateStream);
         return fileList;
     }

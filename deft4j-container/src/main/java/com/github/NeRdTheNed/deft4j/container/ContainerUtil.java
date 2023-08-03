@@ -12,11 +12,16 @@ import java.util.Comparator;
 
 import com.github.NeRdTheNed.deft4j.util.Util;
 
-public class ContainerUtil {
+public final class ContainerUtil {
+    /** Private constructor to hide the default one */
+    private ContainerUtil() {
+        // This space left intentionally blank
+    }
+
     /** Attempt to detect the format of a file from magic bytes */
     public static String detectFormat(byte[] bytes) {
         try
-            (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
+            (final ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
             return detectFormat(bais);
         } catch (final Exception e) {
             e.printStackTrace();
@@ -25,14 +30,14 @@ public class ContainerUtil {
     }
 
     /** Attempt to detect the format of a file from magic bytes */
-    public static String detectFormat(Path path) {
+    private static String detectFormat(Path path) {
         return detectFormat(path.toFile());
     }
 
     /** Attempt to detect the format of a file from magic bytes */
-    public static String detectFormat(File file) {
+    private static String detectFormat(File file) {
         try
-            (FileInputStream fis = new FileInputStream(file)) {
+            (final FileInputStream fis = new FileInputStream(file)) {
             return detectFormat(fis);
         } catch (final Exception e) {
             e.printStackTrace();
@@ -57,18 +62,20 @@ public class ContainerUtil {
 
     /** Attempt to read file magic, and check if it matches known formats */
     private static String detectFormat(InputStream is) throws IOException {
-        final boolean[] isNotPossibleMagic = new boolean[magics.length];
+        final int magicsLength = magics.length;
+        final boolean[] isNotPossibleMagic = new boolean[magicsLength];
 
         for (int readBytes = 0; readBytes < longestMagic; readBytes++) {
             final byte read = (byte) is.read();
 
-            for (int i = 0; i < magics.length; i++) {
+            for (int i = 0; i < magicsLength; i++) {
                 if (!isNotPossibleMagic[i]) {
                     final byte[] magic = magics[i];
+                    final int magicLength = magic.length;
 
-                    if ((magic.length < (readBytes + 1)) || (read != magic[readBytes])) {
+                    if ((magicLength < (readBytes + 1)) || (read != magic[readBytes])) {
                         isNotPossibleMagic[i] = true;
-                    } else if (magic.length <= (readBytes + 1)) {
+                    } else if (magicLength <= (readBytes + 1)) {
                         return magicName[i];
                     }
                 }
@@ -119,7 +126,7 @@ public class ContainerUtil {
     }
 
     /** Attempts to detect the format of a file from only the file name, and returns a container suitable for reading it with */
-    public static DeflateFilesContainer getContainerForFilename(String filename) {
+    private static DeflateFilesContainer getContainerForFilename(String filename) {
         return getContainerForExt(Util.getFileExtension(filename));
     }
 

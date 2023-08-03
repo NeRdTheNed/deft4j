@@ -1,15 +1,14 @@
 package com.github.NeRdTheNed.deft4j.cmd;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import com.github.NeRdTheNed.deft4j.container.GZFile;
@@ -20,7 +19,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "convert-zip", description = "Converts a given zip file to GZip files")
-public class ConvertZip implements Callable<Integer> {
+class ConvertZip implements Callable<Integer> {
 
     @Parameters(index = "0", description = "The input zip file")
     private Path inputFile;
@@ -44,7 +43,7 @@ public class ConvertZip implements Callable<Integer> {
         List<GZFile> converted = null;
 
         try
-            (InputStream is = new BufferedInputStream(new FileInputStream(inputFile.toFile()))) {
+            (final InputStream is = new BufferedInputStream(Files.newInputStream(inputFile))) {
             final ZipFile zip = new ZipFile();
 
             if (!zip.read(is)) {
@@ -60,7 +59,7 @@ public class ConvertZip implements Callable<Integer> {
         }
 
         if (converted != null) {
-            final Set<String> seenNames = new HashSet<>();
+            final Collection<String> seenNames = new HashSet<>();
             int defaultNameCount = 0;
 
             for (final GZFile file : converted) {
@@ -82,7 +81,7 @@ public class ConvertZip implements Callable<Integer> {
                 final Path output = Files.createFile(choosen);
 
                 try
-                    (OutputStream os = Files.newOutputStream(output)) {
+                    (final OutputStream os = Files.newOutputStream(output)) {
                     file.write(os);
                 }
 
@@ -92,7 +91,7 @@ public class ConvertZip implements Callable<Integer> {
             noErr = true;
         }
 
-        return !noErr ? 1 : CommandLine.ExitCode.OK;
+        return noErr ? CommandLine.ExitCode.OK : 1;
     }
 
 }

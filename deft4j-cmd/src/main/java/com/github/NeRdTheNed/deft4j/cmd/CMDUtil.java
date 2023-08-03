@@ -3,8 +3,6 @@ package com.github.NeRdTheNed.deft4j.cmd;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,11 +44,11 @@ public class CMDUtil {
         recompress = recompressMode.ordinal() > RecompressMode.NONE.ordinal();
         final boolean zopfli = recompressMode.ordinal() >= RecompressMode.ZOPFLI.ordinal();
         final Strategy strat = recompressMode.ordinal() >= RecompressMode.ZOPFLI_EXTENSIVE.ordinal() ? Strategy.EXTENSIVE : Strategy.MULTI_CHEAP;
-        compUtil = !recompress ? null : new CompressionUtil(true, true, recompressMode.ordinal() >= RecompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, strat, true, true);
+        compUtil = recompress ? new CompressionUtil(true, true, recompressMode.ordinal() >= RecompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, strat, true, true) : null;
     }
 
     /** Read from the given input stream into the container, optimise, and write to the output stream */
-    public boolean optimise(InputStream is, OutputStream os, DeflateFilesContainer container) throws IOException {
+    private boolean optimise(InputStream is, OutputStream os, DeflateFilesContainer container) throws IOException {
         if (container.read(is)) {
             System.out.println("File type recognised as " + container.fileType());
 
@@ -131,7 +129,7 @@ public class CMDUtil {
             overwrite = true;
             String ext = Util.getFileExtension(input);
 
-            if ("".equals(ext)) {
+            if (ext.isEmpty()) {
                 ext = null;
             }
 
@@ -142,8 +140,8 @@ public class CMDUtil {
         boolean returnVal = false;
 
         try
-            (InputStream is = new BufferedInputStream(new FileInputStream(input.toFile()));
-                    OutputStream os = new BufferedOutputStream(new FileOutputStream(possibleTempPath.toFile()))) {
+            (final InputStream is = new BufferedInputStream(Files.newInputStream(input));
+                    final OutputStream os = new BufferedOutputStream(Files.newOutputStream(possibleTempPath))) {
             final DeflateFilesContainer container = raw ? new RawDeflateFile() : format != null ? ContainerUtil.getContainerForExt(format) : ContainerUtil.getContainerForPath(input);
             returnVal = optimise(is, os, container);
 

@@ -24,12 +24,12 @@ public class MultiCafeUndZopfliCompressor implements MultiCompressor<Options> {
                } : new Options[] { new Options(OutputFormat.DEFLATE, BlockSplitting.FIRST, iter) };
     }
 
-    MultiCafeUndZopfliCompressor(Zopfli zopfliCompressor, Options[] options) {
+    private MultiCafeUndZopfliCompressor(Zopfli zopfliCompressor, Options[] options) {
         this.zopfliCompressor = zopfliCompressor;
         this.options = options;
     }
 
-    MultiCafeUndZopfliCompressor(Options[] options) {
+    private MultiCafeUndZopfliCompressor(Options[] options) {
         this(new Zopfli(8 << 20), options);
     }
 
