@@ -26,9 +26,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     // TODO LinkedList?
     private List<LitLen> litlens;
-    private boolean didCopyLitLens = false;
+    private boolean didCopyLitLens;
     // Decoded data
-    private boolean finishedDec = false;
+    private boolean finishedDec;
     private byte[] decodedData;
     private long dataPos;
     private long sizeBits;
@@ -104,15 +104,13 @@ public class DeflateBlockHuffman extends DeflateBlock {
         assert !finishedDec;
         decodedData = new byte[0x100];
         dataPos = 0;
-        finishedDec = false;
     }
 
     private void finishTemp() {
         assert !finishedDec;
         finishedDec = true;
         // Resize array to decoded data size
-        final byte[] finalArray = Arrays.copyOf(decodedData, (int) dataPos);
-        decodedData = finalArray;
+        decodedData = Arrays.copyOf(decodedData, (int) dataPos);
     }
 
     private static int getLitLenSize(LitLen litlenThis, Huffman litlenDec, Huffman distDec) {
@@ -405,7 +403,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         int litlenRemSize = 0;
         int litlenRemFreq = 0;
 
-        for (int i = 0; i < litSize.length; i++) {
+        for (int i = 0; i < Constants.MAX_DIST_LENS; i++) {
             if (!litNoAllow[i] && litSeen[i]) {
                 final boolean doRem = mode == 1 ? (litFreq[i] < litlenRemFreq) : (litSize[i] < litlenRemSize);
 
