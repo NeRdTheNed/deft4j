@@ -43,7 +43,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     private List<LitLen> rlePairsLitlen;
     private List<LitLen> rlePairsDist;
-    private boolean didCopyRLEPairs = false;
+    private boolean didCopyRLEPairs;
 
     private long dynamicHeaderSizeBits;
 
@@ -378,11 +378,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 }
 
                 final int checkSize = getLitLenSize(check, litlenDec, distDec);
-                final int arrSize = check.decodedVal.length;
                 int totalSize = 0;
 
-                for (int i = 0; i < arrSize; i++) {
-                    final int b = check.decodedVal[i] & 0xFF;
+                for (final byte value : check.decodedVal) {
+                    final int b = value & 0xFF;
                     final int bSize = litlenDec.getSymLen(b);
 
                     if (bSize < 1) {
@@ -430,11 +429,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
                         continue;
                     }
 
-                    final int arrSize = check.decodedVal.length;
                     litIter.remove();
 
-                    for (int i = 0; i < arrSize; i++) {
-                        final byte bNeg = check.decodedVal[i];
+                    for (final byte bNeg : check.decodedVal) {
                         final int b = bNeg & 0xFF;
                         final LitLen rep = new LitLen(b);
                         rep.decodedVal = new byte[] { bNeg };
@@ -521,7 +518,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     decodedVal = new byte[dist];
                     assert (dist >= Constants.CODELEN_ZEROS_MIN) &&
                     (dist <= Constants.CODELEN_ZEROS_MAX);
-                    Arrays.fill(decodedVal, (byte) 0);
+                    //Arrays.fill(decodedVal, (byte) 0);
                     break;
                 }
 
@@ -531,7 +528,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     decodedVal = new byte[dist];
                     assert (dist >= Constants.CODELEN_ZEROS2_MIN) &&
                     (dist <= Constants.CODELEN_ZEROS2_MAX);
-                    Arrays.fill(decodedVal, (byte) 0);
+                    //Arrays.fill(decodedVal, (byte) 0);
                     break;
                 }
 
@@ -567,7 +564,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         sizeBits -= dynamicHeaderSizeBits;
         dynamicHeaderSizeBits = 0;
         final List<LitLen> rlePairsComb = Stream.concat(rlePairsLitlen.stream(), rlePairsDist.stream()).collect(Collectors.toList());
-        final List<Integer> lengths = new ArrayList<>();
+        final Collection<Integer> lengths = new ArrayList<>();
         /*numLitlenLens = 0;
         numDistLens = 0;
         final Set<Integer> uniqueLit = new HashSet<>();
@@ -792,7 +789,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     System.out.println("EOB");
                 }
 
-                final LitLen readLit = new LitLen(litlen);
+                final LitLen readLit = new LitLen(Constants.LITLEN_EOB);
                 final int encodedSize = litlenDecSym.codeLen;
                 sizeBits += encodedSize;
                 litlenSizeBits += encodedSize;
