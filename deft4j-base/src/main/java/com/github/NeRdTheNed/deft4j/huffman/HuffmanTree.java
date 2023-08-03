@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 
@@ -157,7 +158,7 @@ public class HuffmanTree {
             traverse(((InternalNode) node).right, depth + 1);
         } else if (node instanceof LeafNode) {
             if (depthMap.get(depth) == null) {
-                depthMap.put(depth, new ArrayList<LeafNode>());
+                depthMap.put(depth, new ArrayList<>());
             }
 
             depthMap.get(depth).add((LeafNode) node);
@@ -176,11 +177,12 @@ public class HuffmanTree {
         int nextCode = 0;
         int lastShift = 0;
 
-        for (final Integer length : depthMap.keySet()) {
+        for (final Entry<Integer, List<LeafNode>> entry : depthMap.entrySet()) {
+            final Integer length = entry.getKey();
             nextCode <<= length - lastShift;
             lastShift = length;
             // Sort leaves by value
-            final List<LeafNode> leaves = depthMap.get(length);
+            final List<LeafNode> leaves = entry.getValue();
             Collections.sort(leaves, (n1, n2) -> n1.value - n2.value);
 
             // Assign codes to leaves

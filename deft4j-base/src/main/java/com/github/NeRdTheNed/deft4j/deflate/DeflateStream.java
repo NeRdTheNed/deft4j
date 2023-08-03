@@ -272,15 +272,15 @@ public class DeflateStream {
                                         continue;
                                     }
 
-                                    final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
-                                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, use8, use7, alt8);
+                                    final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + " ohh" + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
+                                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, true, use8, use7, alt8);
                                     callback.accept(new Pair<>(opt, newName));
                                 }
                             }
                         }
                     } else {
-                        final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + (ohh ? " ohh" : "");
-                        final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, ohh, true, true, false);
+                        final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded");
+                        final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, false, false, false, false);
                         callback.accept(new Pair<>(opt, newName));
                     }
                 }
