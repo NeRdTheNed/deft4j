@@ -400,8 +400,11 @@ public class DeflateStream {
             if (!isOrigFixed) {
                 // Fixed huffman block
                 final DeflateBlockHuffman fixed = toFixedHuffman(toOptimiseHuffman);
-                fixed.optimise();
-                callback.accept(new Pair<>(fixed, "default fixed-huffman"));
+
+                if (fixed != null) {
+                    fixed.optimise();
+                    callback.accept(new Pair<>(fixed, "default fixed-huffman"));
+                }
             }
 
             addOptimisedRecoded(e -> { callback.accept(e); runOptimisationsCallback.accept(e); }, toOptimiseHuffman, "default ", position);
