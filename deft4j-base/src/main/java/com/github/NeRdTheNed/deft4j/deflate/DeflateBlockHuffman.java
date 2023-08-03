@@ -3,6 +3,7 @@ package com.github.NeRdTheNed.deft4j.deflate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
