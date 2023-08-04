@@ -293,8 +293,12 @@ public class DeflateStream {
 
     private static DeflateBlock optimiseBlockNormal(DeflateBlock block) {
         final DeflateBlock optimised = block.copy();
-        optimised.optimise();
-        return optimised;
+
+        if (optimised.optimise() > 0) {
+            return optimised;
+        }
+
+        return null;
     }
 
     private static DeflateBlockHuffman toFixedHuffman(DeflateBlockHuffman block) {
@@ -339,7 +343,10 @@ public class DeflateStream {
         };
         // Standard
         final DeflateBlock optimised = optimiseBlockNormal(toOptimise);
-        callback.accept(new Pair<>(optimised, "optimised"));
+
+        if (optimised != null) {
+            callback.accept(new Pair<>(optimised, "optimised"));
+        }
 
         if (toOptimise.getDeflateBlockType() != DeflateBlockType.STORED) {
             // Uncompressed
@@ -357,12 +364,10 @@ public class DeflateStream {
         } else if (isOrigFixed) {
             toOptimiseHuffman = (DeflateBlockHuffman) toOptimise.copy();
             toOptimiseHuffman.recodeHuffman();
-            optimisedHuffman = (DeflateBlockHuffman) toOptimiseHuffman.copy();
-            optimisedHuffman.optimise();
+            optimisedHuffman = (DeflateBlockHuffman) optimiseBlockNormal(toOptimiseHuffman);
         }
 
         if (toOptimiseHuffman != null) {
-            assert(optimisedHuffman != null);
             final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallback = toFixed -> {
                 // Fixed huffman block
                 /*final String name = toFixed.v + " fixed-huffman";
@@ -375,7 +380,12 @@ public class DeflateStream {
                 final DeflateBlockHuffman post = (DeflateBlockHuffman) toFixed.k.copy();
                 post.recodeHeader();
                 callback.accept(new Pair<>(post, namePost));
-                callback.accept(new Pair<>(optimiseBlockNormal(post), namePost + " optimised"));
+                final DeflateBlock postOpt = optimiseBlockNormal(post);
+
+                if (postOpt != null) {
+                    callback.accept(new Pair<>(postOpt, namePost + " optimised"));
+                }
+
                 addOptimisedRecoded(callback, post, namePost + " ", position);
 
                 // RLE pruned header
@@ -383,7 +393,12 @@ public class DeflateStream {
                 final DeflateBlockHuffman prune = (DeflateBlockHuffman) toFixed.k.copy();
                 prune.recodeHeaderToLessRLEMatches();
                 callback.accept(new Pair<>(prune, namePrune));
-                callback.accept(new Pair<>(optimiseBlockNormal(prune), namePrune + " optimised"));
+                final DeflateBlock pruneOpt = optimiseBlockNormal(prune);
+
+                if (pruneOpt != null) {
+                    callback.accept(new Pair<>(pruneOpt, namePrune + " optimised"));
+                }
+
                 addOptimisedRecoded(callback, prune, namePrune + " ", position);
 
                 // Least-expensive dist litlen pruned
@@ -401,7 +416,10 @@ public class DeflateStream {
                 runOptimisationsCallback.accept(e);
             };
             runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
-            runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
+
+            if (optimisedHuffman != null) {
+                runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
+            }
 
             if (!isOrigFixed) {
                 // Fixed huffman block
