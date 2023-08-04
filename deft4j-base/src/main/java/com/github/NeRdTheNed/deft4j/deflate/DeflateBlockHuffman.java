@@ -472,6 +472,12 @@ public class DeflateBlockHuffman extends DeflateBlock {
         // TODO Backrefs / check if sequence is in backref codebook
         final long original = sizeBits;
         replaceBackrefsWithLiteralsIfSmaller(false, true);
+        optimiseHeader();
+        return original - sizeBits;
+    }
+
+    public long optimiseHeader() {
+        final long original = sizeBits;
         removeTrailingHeaderCodes(true);
         replaceRLERunsWithLiteralsIfSmaller(false, true);
         return original - sizeBits;

@@ -181,19 +181,14 @@ public class DeflateStream {
         return size;
     }
 
-    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean pre, boolean ohh, boolean use8, boolean use7, boolean alt8) {
+    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean ohh, boolean use8, boolean use7, boolean alt8) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
 
         final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
-
-        if (pre) {
-            optimised.optimise();
-        }
-
         optimised.rewriteHeader(ohh, use8, use7, alt8);
-        optimised.optimise();
+        optimised.optimiseHeader();
         return optimised;
     }
 
@@ -245,43 +240,52 @@ public class DeflateStream {
     private static final boolean DEFAULT_8 = false;
     private static final boolean ALT_8 = !DEFAULT_8;
 
+    private static DeflateBlockHuffman optimiseBlockCopyHelper(DeflateBlockHuffman block) {
+        final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
+        optimised.optimise();
+        return optimised;
+    }
+
+    private static DeflateBlockHuffman optimiseBlockHelper(DeflateBlockHuffman block) {
+        block.optimise();
+        return block;
+    }
+
     private static void addOptimisedRecoded(Consumer<? super Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
-        blocks.put(toOptimise, baseName);
-        blocks.put(recodedHuffman(toOptimise, false), baseName + "huffman-recoded ");
+        blocks.put(optimiseBlockCopyHelper(toOptimise), baseName);
+        blocks.put(optimiseBlockHelper(recodedHuffman(toOptimise, false)), baseName + "huffman-recoded ");
         final DeflateBlockHuffman pruned = recodedHuffman(toOptimise, true);
-        blocks.put(pruned, baseName + "huffman-recoded-pruned ");
+        blocks.put(optimiseBlockCopyHelper(pruned), baseName + "huffman-recoded-pruned ");
         final DeflateBlockHuffman prunedFull = recodedHuffmanFull(pruned, position);
 
         if (prunedFull != pruned) {
-            blocks.put(prunedFull, baseName + "huffman-recoded-pruned-full ");
+            blocks.put(optimiseBlockHelper(prunedFull), baseName + "huffman-recoded-pruned-full ");
         }
 
         for (final Entry<DeflateBlockHuffman, String> entry : blocks.entrySet()) {
             final DeflateBlockHuffman block = entry.getKey();
             final String name = entry.getValue();
 
-            for (final boolean pre : new boolean[] {true, false}) {
-                for (final boolean ohh : new boolean[] {true, false}) {
-                    if (ohh) {
-                        for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
-                            for (final boolean use8 : new boolean[] {true, false}) {
-                                for (final boolean use7 : new boolean[] {true, false}) {
-                                    if (!use8 && (alt8 || !use7)) {
-                                        continue;
-                                    }
-
-                                    final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded") + " ohh" + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
-                                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, true, use8, use7, alt8);
-                                    callback.accept(new Pair<>(opt, newName));
+            for (final boolean ohh : new boolean[] {true, false}) {
+                if (ohh) {
+                    for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
+                        for (final boolean use8 : new boolean[] {true, false}) {
+                            for (final boolean use7 : new boolean[] {true, false}) {
+                                if (!use8 && (alt8 || !use7)) {
+                                    continue;
                                 }
+
+                                final String newName = name + "optimised-recoded ohh" + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
+                                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, true, use8, use7, alt8);
+                                callback.accept(new Pair<>(opt, newName));
                             }
                         }
-                    } else {
-                        final String newName = name + (pre ? "recoded-optimised" : "optimised-recoded");
-                        final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, pre, false, false, false, false);
-                        callback.accept(new Pair<>(opt, newName));
                     }
+                } else {
+                    final String newName = name + "optimised-recoded";
+                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, false, false, false, false);
+                    callback.accept(new Pair<>(opt, newName));
                 }
             }
         }
