@@ -486,10 +486,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private static final boolean DEBUG_PRINT_HEADER_RECODE = false;
 
     public void rewriteHeader() {
-        rewriteHeader(true, true, true, false);
+        rewriteHeader(true, true, true, false, false, false, false);
     }
 
-    public void rewriteHeader(boolean ohh, boolean use8, boolean use7, boolean alt8) {
+    public void rewriteHeader(boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2) {
         if (type != DeflateBlockType.DYNAMIC) {
             return;
         }
@@ -504,7 +504,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         numDistLens = distDec.table.codeLen.length;
         rlePairs = new ArrayList<>();
         didCopyRLEPairs = true;
-        final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh, use8, use7, alt8);
+        final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh, use8, use7, alt8, noRep, noZRep, noZRep2);
         codeLenDec = Huffman.ofRLEPacked(repack);
         //codelenLengths = new int[Constants.MAX_CODELEN_LENS];
         //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
@@ -739,16 +739,16 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec) {
-        recodeToHuffman(newLitlenDec, newDistDec, true, true, true, false);
+        recodeToHuffman(newLitlenDec, newDistDec, true, true, true, false, false, false, false);
     }
 
-    private void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh, boolean use8, boolean use7, boolean alt8) {
+    private void recodeToHuffman(Huffman newLitlenDec, Huffman newDistDec, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2) {
         if ((newLitlenDec == Huffman.FIXED_LITLEN_INST) && (newDistDec == Huffman.FIXED_DIST_INST)) {
             recodeToFixedHuffman();
         } else {
             type = DeflateBlockType.DYNAMIC;
             recodeToHuffmanInternal(newLitlenDec.copy(), newDistDec.copy());
-            rewriteHeader(ohh, use8, use7, alt8);
+            rewriteHeader(ohh, use8, use7, alt8, noRep, noZRep, noZRep2);
         }
     }
 
