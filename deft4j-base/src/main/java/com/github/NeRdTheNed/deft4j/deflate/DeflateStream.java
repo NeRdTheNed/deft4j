@@ -424,6 +424,23 @@ public class DeflateStream {
             final Consumer<Pair<? extends DeflateBlockHuffman, String>> runOptimisationsCallbackMulti = e -> {
                 callback.accept(e);
                 runOptimisationsCallback.accept(e);
+
+                final Pair<DeflateBlockHuffman, String> huffRec = new Pair<>(recodedHuffman(e.k, false), e.v + " huffman-recoded");
+                callback.accept(huffRec);
+                runOptimisationsCallback.accept(huffRec);
+
+                final DeflateBlockHuffman pruned = recodedHuffman(e.k, true);
+                final Pair<DeflateBlockHuffman, String> huffRecPruned = new Pair<>(pruned, e.v + " huffman-recoded-pruned");
+                callback.accept(huffRecPruned);
+                runOptimisationsCallback.accept(huffRecPruned);
+
+                final DeflateBlockHuffman prunedFull = recodedHuffmanFull(pruned, position);
+
+                if (prunedFull != pruned) {
+                    final Pair<DeflateBlockHuffman, String> huffRecPrunedFull = new Pair<>(prunedFull, e.v + " huffman-recoded-pruned-full");
+                    callback.accept(huffRecPrunedFull);
+                    runOptimisationsCallback.accept(huffRecPrunedFull);
+                }
             };
             runOptimisationsCallbackMulti.accept(new Pair<>(toOptimiseHuffman, "default"));
 
