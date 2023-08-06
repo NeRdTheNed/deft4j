@@ -10,7 +10,7 @@ deft4j implements a few deflate stream optimisations:
 
 - If the encoded size of a backref is larger than the equivalent sequence of literals, and the literals are able to be encoded by the huffman codes a block uses, it replaces the backref with literals.
 - Similarly, if a RLE instruction in a dynamic tree header is larger than the equivalent sequence of literals, it replaces the instruction with literals.
-- An attempt at re-encoding dynamic headers is made, although this should be improved in the future.
+- Dynamic headers are re-encoded with various strategies.
 - Type 2 blocks are tested to see if they would be smaller when encoded as type 1 blocks.
 - Trailing zero-length codelength lengths are removed from dynamic headers.
 - Empty blocks are removed.
@@ -28,8 +28,8 @@ deft4j also includes options for recompressing files with various libraries, inc
 deft4j is currently available as a command line application:
 
 ```
-Usage: deft4j [-hrV] [-f=<format>] [-m=<recompressMode>] <inputFile>
-              <outputFile>
+Usage: deft4j optimise [-hrV] [-f=<format>] [-m=<recompressMode>] <inputFile>
+                       <outputFile>
 Deflate stream optimiser
       <inputFile>         The file to optimise
       <outputFile>        The optimised file
@@ -37,7 +37,8 @@ Deflate stream optimiser
   -h, --help              Show this help message and exit.
   -m, --mode, --recompress-mode=<recompressMode>
                           Enable various levels of recompression. Valid values:
-                            NONE, CHEAP, ZOPFLI, ZOPFLI_EXTENSIVE
+                            NONE, CHEAP, ZOPFLI, ZOPFLI_EXTENSIVE,
+                            ZOPFLI_VERY_EXTENSIVE
   -r, --raw               Ignore file format, treat input as a raw deflate
                             stream
   -V, --version           Print version information and exit.
