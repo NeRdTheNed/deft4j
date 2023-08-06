@@ -58,7 +58,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.github.NeRdTheNed.deft4j'
             artifactId = 'deft4j-compress'
-            version = '1.0.0'
+            version = '1.0.0-beta'
 
             from components.java
         }
