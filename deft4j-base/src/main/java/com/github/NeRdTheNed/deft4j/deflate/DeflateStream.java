@@ -284,7 +284,7 @@ public class DeflateStream {
                                             }
 
                                             final String newName = name + "optimised-recoded ohh" + (noZRep ? " no-zrep" : "") + (noZRep2 ? " no-zrep2" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
-                                            final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, true, use8, use7, alt8, true, noZRep, noZRep2);
+                                            final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, true, use8, use7, alt8, false, noZRep, noZRep2);
                                             callback.accept(new Pair<>(opt, newName));
                                         }
                                     }
