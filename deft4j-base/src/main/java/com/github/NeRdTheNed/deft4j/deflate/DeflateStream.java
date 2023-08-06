@@ -181,13 +181,18 @@ public class DeflateStream {
         return size;
     }
 
-    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2) {
+    private static DeflateBlockHuffman optimiseBlockDynBlock(DeflateBlockHuffman block, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2, boolean prune) {
         if (block.getDeflateBlockType() != DeflateBlockType.DYNAMIC) {
             return null;
         }
 
         final DeflateBlockHuffman optimised = (DeflateBlockHuffman) block.copy();
         optimised.rewriteHeader(ohh, use8, use7, alt8, noRep, noZRep, noZRep2);
+
+        if (prune) {
+            optimised.recodeHeaderToLessRLEMatches();
+        }
+
         optimised.optimiseHeader();
         return optimised;
     }
@@ -267,32 +272,34 @@ public class DeflateStream {
             final DeflateBlockHuffman block = entry.getKey();
             final String name = entry.getValue();
 
-            for (final boolean noRep : new boolean[] {false, true}) {
-                for (final boolean noZRep : new boolean[] {false, true}) {
-                    for (final boolean noZRep2 : new boolean[] {false, true}) {
-                        for (final boolean ohh : new boolean[] {true, false}) {
-                            if (ohh) {
-                                if (noRep) {
-                                    continue;
-                                }
+            for (final boolean prune : new boolean[] {false, true}) {
+                for (final boolean noRep : new boolean[] {false, true}) {
+                    for (final boolean noZRep : new boolean[] {false, true}) {
+                        for (final boolean noZRep2 : new boolean[] {false, true}) {
+                            for (final boolean ohh : new boolean[] {true, false}) {
+                                if (ohh) {
+                                    if (noRep) {
+                                        continue;
+                                    }
 
-                                for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
-                                    for (final boolean use8 : new boolean[] {true, false}) {
-                                        for (final boolean use7 : new boolean[] {true, false}) {
-                                            if (!use8 && (alt8 || !use7)) {
-                                                continue;
+                                    for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
+                                        for (final boolean use8 : new boolean[] {true, false}) {
+                                            for (final boolean use7 : new boolean[] {true, false}) {
+                                                if (!use8 && (alt8 || !use7)) {
+                                                    continue;
+                                                }
+
+                                                final String newName = name + "optimised-recoded ohh" + (noZRep ? " no-zrep" : "") + (noZRep2 ? " no-zrep2" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "") + (prune ? " rle-pruned" : "");
+                                                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, true, use8, use7, alt8, false, noZRep, noZRep2, prune);
+                                                callback.accept(new Pair<>(opt, newName));
                                             }
-
-                                            final String newName = name + "optimised-recoded ohh" + (noZRep ? " no-zrep" : "") + (noZRep2 ? " no-zrep2" : "") + (use8 ? alt8 ? " alt-optimise-8" : " optimise-8" : "") + (use7 ? " optimise-7" : "");
-                                            final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, true, use8, use7, alt8, false, noZRep, noZRep2);
-                                            callback.accept(new Pair<>(opt, newName));
                                         }
                                     }
+                                } else {
+                                    final String newName = name + "optimised-recoded" + (noRep ? " no-rep" : "") + (noZRep ? " no-zrep" : "") + (noZRep2 ? " no-zrep2" : "") + (prune ? " rle-pruned" : "");
+                                    final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, false, false, false, false, noRep, noZRep, noZRep2, prune);
+                                    callback.accept(new Pair<>(opt, newName));
                                 }
-                            } else {
-                                final String newName = name + "optimised-recoded" + (noRep ? " no-rep" : "") + (noZRep ? " no-zrep" : "") + (noZRep2 ? " no-zrep2" : "");
-                                final DeflateBlockHuffman opt = optimiseBlockDynBlock(block, false, false, false, false, noRep, noZRep, noZRep2);
-                                callback.accept(new Pair<>(opt, newName));
                             }
                         }
                     }
