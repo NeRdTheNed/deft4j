@@ -76,7 +76,7 @@ public class PNGFile implements DeflateFilesContainer {
                 return ret;
             }
 
-            assert(!isZLibCompressedNonIdat());
+            assert !isZLibCompressedNonIdat();
             return null;
         }
 
@@ -100,7 +100,7 @@ public class PNGFile implements DeflateFilesContainer {
                 return;
             }
 
-            assert(!isZLibCompressedNonIdat());
+            assert !isZLibCompressedNonIdat();
         }
 
         boolean write(OutputStream os) throws IOException {
@@ -277,7 +277,7 @@ public class PNGFile implements DeflateFilesContainer {
                 return false;
             }
 
-            if ((nextChunk.data.length > 0)) {
+            if (nextChunk.data.length > 0) {
                 if (nextChunk.isIDAT()) {
                     boas.write(nextChunk.data);
                 } else if (nextChunk.isZLibCompressedNonIdat()) {

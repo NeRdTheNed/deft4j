@@ -40,7 +40,7 @@ public class DeflateBlockUncompressed extends DeflateBlock {
         os.writeNBits(finalBlockI, 3);
         final byte[] lenNlen = new byte[4];
         final int lenght = storedData != null ? storedData.length : 0;
-        lenNlen[0] = (byte)(lenght);
+        lenNlen[0] = (byte)lenght;
         lenNlen[1] = (byte)(lenght >>> 8);
         lenNlen[2] = (byte) ~lenNlen[0];
         lenNlen[3] = (byte) ~lenNlen[1];

@@ -143,12 +143,12 @@ public abstract class DeflateBlock {
 
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. */
     static byte[] readSlice(long initialBackDist, final long initialSize, final DeflateBlock thisBlock, final byte[] thisBlockData, final long thisBlockSize, final long initialBackDistOffset) {
-        assert ((initialBackDist <= Constants.LZZ_BACKREF_LEN) && (initialBackDist >= 0));
-        assert (initialBackDistOffset >= 0);
+        assert (initialBackDist <= Constants.LZZ_BACKREF_LEN) && (initialBackDist >= 0);
+        assert initialBackDistOffset >= 0;
         initialBackDist += initialBackDistOffset;
         long backDist = initialBackDist;
         long size = initialSize;
-        assert (size > 0);
+        assert size > 0;
 
         if (backDist < thisBlockSize) {
             final long offsetFromStartOfBlock = thisBlockSize - backDist;

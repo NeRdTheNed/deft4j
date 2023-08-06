@@ -173,7 +173,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         switch ((int) rlePair.litlen) {
         case Constants.CODELEN_COPY: {
-            assert (prev != null);
+            assert prev != null;
             Arrays.fill(slice, (byte) prev.litlen);
             break;
         }
@@ -377,7 +377,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     // TODO Try longest code
     public void removeDistLitLeastExpensive(int mode) {
-        assert ((mode == 0) || (mode == 1));
+        assert (mode == 0) || (mode == 1);
 
         if (type != DeflateBlockType.DYNAMIC) {
             return;
@@ -424,7 +424,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         for (int i = 0; i < Constants.MAX_DIST_LENS; i++) {
             if (!litNoAllow[i] && litSeen[i]) {
-                final boolean doRem = mode == 1 ? (litFreq[i] < litlenRemFreq) : (litSize[i] < litlenRemSize);
+                final boolean doRem = mode == 1 ? litFreq[i] < litlenRemFreq : litSize[i] < litlenRemSize;
 
                 if ((litlenRem == -1) || doRem) {
                     litlenRem = i;
