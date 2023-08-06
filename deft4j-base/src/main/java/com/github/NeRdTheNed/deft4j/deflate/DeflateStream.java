@@ -441,10 +441,13 @@ public class DeflateStream {
                 }
             }
 
-            addOptimisedRecoded(runOptimisationsCallbackMulti, toOptimiseHuffman, "default ", position);
+            /*addOptimisedRecoded(runOptimisationsCallbackMulti, toOptimiseHuffman, "default ", position);
             addOptimisedRecoded(runOptimisationsCallbackMulti, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
             addOptimisedRecoded(runOptimisationsCallbackMulti, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
-            //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");
+            //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");*/
+            runOptimisationsCallbackMulti.accept(new Pair<>(toOptimiseHuffman, "default"));
+            runOptimisationsCallbackMulti.accept(new Pair<>(leastExpPruned(toOptimiseHuffman), "default-least-exp"));
+            runOptimisationsCallbackMulti.accept(new Pair<>(leastSeenPruned(toOptimiseHuffman), "default-least-seen"));
         }
 
         return currentSmallestPair.k;
