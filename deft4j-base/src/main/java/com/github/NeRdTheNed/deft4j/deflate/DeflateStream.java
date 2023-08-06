@@ -256,6 +256,10 @@ public class DeflateStream {
         return block;
     }
 
+    private static final boolean[] TRUE_FALSE = {true, false};
+    private static final boolean[] FALSE_TRUE = {false, true};
+    private static final boolean[] ALT_8_ARR = (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8});
+
     private static void addOptimisedRecoded(Consumer<? super Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
         final Map<DeflateBlockHuffman, String> blocks = new LinkedHashMap<>();
         blocks.put(optimiseBlockCopyHelper(toOptimise), baseName);
@@ -272,19 +276,19 @@ public class DeflateStream {
             final DeflateBlockHuffman block = entry.getKey();
             final String name = entry.getValue();
 
-            for (final boolean prune : new boolean[] {false, true}) {
-                for (final boolean noRep : new boolean[] {false, true}) {
-                    for (final boolean noZRep : new boolean[] {false, true}) {
-                        for (final boolean noZRep2 : new boolean[] {false, true}) {
-                            for (final boolean ohh : new boolean[] {true, false}) {
+            for (final boolean prune : FALSE_TRUE) {
+                for (final boolean noRep : FALSE_TRUE) {
+                    for (final boolean noZRep : FALSE_TRUE) {
+                        for (final boolean noZRep2 : FALSE_TRUE) {
+                            for (final boolean ohh : TRUE_FALSE) {
                                 if (ohh) {
                                     if (noRep) {
                                         continue;
                                     }
 
-                                    for (final boolean alt8 : (TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8})) {
-                                        for (final boolean use8 : new boolean[] {true, false}) {
-                                            for (final boolean use7 : new boolean[] {true, false}) {
+                                    for (final boolean alt8 : ALT_8_ARR) {
+                                        for (final boolean use8 : TRUE_FALSE) {
+                                            for (final boolean use7 : TRUE_FALSE) {
                                                 if (!use8 && (alt8 || !use7)) {
                                                     continue;
                                                 }
