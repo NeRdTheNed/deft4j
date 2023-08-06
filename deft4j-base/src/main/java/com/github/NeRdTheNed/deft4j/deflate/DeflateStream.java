@@ -425,10 +425,10 @@ public class DeflateStream {
                 callback.accept(e);
                 runOptimisationsCallback.accept(e);
             };
-            runOptimisationsCallback.accept(new Pair<>(toOptimiseHuffman, "default"));
+            runOptimisationsCallbackMulti.accept(new Pair<>(toOptimiseHuffman, "default"));
 
             if (optimisedHuffman != null) {
-                runOptimisationsCallback.accept(new Pair<>(optimisedHuffman, "optimised"));
+                runOptimisationsCallbackMulti.accept(new Pair<>(optimisedHuffman, "optimised"));
             }
 
             if (!isOrigFixed) {
@@ -445,7 +445,7 @@ public class DeflateStream {
             addOptimisedRecoded(runOptimisationsCallbackMulti, leastExpPruned(toOptimiseHuffman), "default-least-exp ", position);
             addOptimisedRecoded(runOptimisationsCallbackMulti, leastSeenPruned(toOptimiseHuffman), "default-least-seen ", position);
             //addOptimisedRecoded(callback::accept, leastPruned(toOptimiseHuffman), "default-least ");*/
-            runOptimisationsCallbackMulti.accept(new Pair<>(toOptimiseHuffman, "default"));
+            //runOptimisationsCallbackMulti.accept(new Pair<>(toOptimiseHuffman, "default"));
             runOptimisationsCallbackMulti.accept(new Pair<>(leastExpPruned(toOptimiseHuffman), "default-least-exp"));
             runOptimisationsCallbackMulti.accept(new Pair<>(leastSeenPruned(toOptimiseHuffman), "default-least-seen"));
         }
