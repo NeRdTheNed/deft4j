@@ -41,31 +41,6 @@ public class MultiCafeUndZopfliCompressor implements MultiCompressor<Options> {
      * Compress using Zopfli deflate compression.
      *
      * @param uncompressedData uncompressed data
-     * @return compressed data
-     */
-    @Override
-    public byte[] compress(byte[] uncompressedData) throws IOException {
-        byte[] compressedData = null;
-
-        for (final Options option : options) {
-            final byte[] currentResult = compressWithOptions(uncompressedData, option);
-
-            if ((compressedData == null) || (currentResult.length < compressedData.length)) {
-                compressedData = currentResult;
-            }
-        }
-
-        if (compressedData == null) {
-            throw new IOException("Unable to compress data with CafeUndZopfli");
-        }
-
-        return compressedData;
-    }
-
-    /**
-     * Compress using Zopfli deflate compression.
-     *
-     * @param uncompressedData uncompressed data
      * @param options zopfli compression options
      * @return compressed data
      */
@@ -79,6 +54,11 @@ public class MultiCafeUndZopfliCompressor implements MultiCompressor<Options> {
     @Override
     public String getName() {
         return "CafeUndZopfli";
+    }
+
+    @Override
+    public Options[] getOptions() {
+        return options;
     }
 
 }

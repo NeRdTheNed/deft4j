@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.zip.Deflater;
 
 /** Compressor using the JVM Deflater class */
-public class JavaCompressor implements Compressor {
+public class JavaCompressor implements SingleCompressor {
     /** Cached deflater */
     private final Deflater jvmCompressor;
 
@@ -33,7 +33,7 @@ public class JavaCompressor implements Compressor {
      * @return compressed data
      */
     @Override
-    public byte[] compress(byte[] uncompressedData) {
+    public byte[] compressSingle(byte[] uncompressedData) {
         jvmCompressor.setInput(uncompressedData);
         jvmCompressor.finish();
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();

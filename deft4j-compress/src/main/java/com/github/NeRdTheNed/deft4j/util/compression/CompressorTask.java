@@ -2,7 +2,7 @@ package com.github.NeRdTheNed.deft4j.util.compression;
 
 import java.util.concurrent.Callable;
 
-class CompressorTask implements Callable<byte[]> {
+class CompressorTask implements Callable<byte[][]> {
 
     private final Compressor compressor;
     private final byte[] uncompressedData;
@@ -13,7 +13,7 @@ class CompressorTask implements Callable<byte[]> {
     }
 
     @Override
-    public byte[] call() throws Exception {
+    public byte[][] call() throws Exception {
         if (CompressionUtil.PRINT_OPT_FINE) {
             System.out.println("Trying compressor " + compressor.getName());
         }

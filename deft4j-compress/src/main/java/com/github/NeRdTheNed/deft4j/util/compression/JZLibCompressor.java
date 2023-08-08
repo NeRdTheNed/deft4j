@@ -8,7 +8,7 @@ import com.jcraft.jzlib.DeflaterOutputStream;
 import com.jcraft.jzlib.JZlib;
 
 /** Compressor using JZlib */
-public class JZLibCompressor implements Compressor {
+public class JZLibCompressor implements SingleCompressor {
     private final int strategy;
 
     public JZLibCompressor(int strategy) {
@@ -26,7 +26,7 @@ public class JZLibCompressor implements Compressor {
      * @return compressed data
      */
     @Override
-    public byte[] compress(byte[] uncompressedData) throws IOException {
+    public byte[] compressSingle(byte[] uncompressedData) throws IOException {
         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         final Deflater jzlibCompressor = new Deflater(JZlib.Z_BEST_COMPRESSION, true);
         jzlibCompressor.params(JZlib.Z_BEST_COMPRESSION, strategy);

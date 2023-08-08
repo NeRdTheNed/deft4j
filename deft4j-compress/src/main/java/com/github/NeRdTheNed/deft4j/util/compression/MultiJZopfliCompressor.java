@@ -2,7 +2,6 @@ package com.github.NeRdTheNed.deft4j.util.compression;
 
 import static lu.luz.jzopfli.Zopfli_lib.ZopfliCompress;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -72,31 +71,6 @@ public class MultiJZopfliCompressor implements MultiCompressor<ZopfliOptions> {
      * Compress using JZopfli deflate compression.
      *
      * @param uncompressedData uncompressed data
-     * @return compressed data
-     */
-    @Override
-    public byte[] compress(byte[] uncompressedData) throws IOException {
-        byte[] compressedData = null;
-
-        for (final ZopfliOptions option : options) {
-            final byte[] currentResult = compressWithOptions(uncompressedData, option);
-
-            if ((compressedData == null) || (currentResult.length < compressedData.length)) {
-                compressedData = currentResult;
-            }
-        }
-
-        if (compressedData == null) {
-            throw new IOException("Unable to compress data with JZopfli");
-        }
-
-        return compressedData;
-    }
-
-    /**
-     * Compress using JZopfli deflate compression.
-     *
-     * @param uncompressedData uncompressed data
      * @param jzOptions zopfli compression options
      * @return compressed data
      */
@@ -113,6 +87,11 @@ public class MultiJZopfliCompressor implements MultiCompressor<ZopfliOptions> {
     @Override
     public String getName() {
         return "JZopfli";
+    }
+
+    @Override
+    public ZopfliOptions[] getOptions() {
+        return options;
     }
 
 }

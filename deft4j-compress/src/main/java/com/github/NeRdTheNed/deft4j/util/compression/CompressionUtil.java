@@ -98,7 +98,7 @@ public class CompressionUtil {
         long currentSizeBits = Long.MAX_VALUE;
 
         if (threaded) {
-            final CompletionService<byte[]> compService = new ExecutorCompletionService<>(execService.get());
+            final CompletionService<byte[][]> compService = new ExecutorCompletionService<>(execService.get());
             int tasks = 0;
 
             for (final Compressor compressor : compressors) {
@@ -108,22 +108,24 @@ public class CompressionUtil {
 
             for (int i = 0; i < tasks; i++) {
                 try {
-                    final Future<byte[]> result = compService.take();
-                    byte[] currentResult = result.get();
+                    final Future<byte[][]> result = compService.take();
+                    final byte[][] currentResultList = result.get();
 
-                    if (useDeft) {
-                        currentResult = Deft.optimiseDeflateStream(currentResult);
-                    }
-
-                    if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
-                        compressedData = currentResult;
-
-                        if (compareDeft) {
-                            currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                    for (byte[] currentResult : currentResultList) {
+                        if (useDeft) {
+                            currentResult = Deft.optimiseDeflateStream(currentResult);
                         }
 
-                        if (PRINT_OPT_FINE) {
-                            System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
+                        if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
+                            compressedData = currentResult;
+
+                            if (compareDeft) {
+                                currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                            }
+
+                            if (PRINT_OPT_FINE) {
+                                System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
+                            }
                         }
                     }
                 } catch (final Exception e) {
@@ -139,21 +141,23 @@ public class CompressionUtil {
                         System.out.println("Trying compressor " + compressor.getName());
                     }
 
-                    byte[] currentResult = compressor.compress(uncompressedData);
+                    final byte[][] currentResultList = compressor.compress(uncompressedData);
 
-                    if (useDeft) {
-                        currentResult = Deft.optimiseDeflateStream(currentResult);
-                    }
-
-                    if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
-                        compressedData = currentResult;
-
-                        if (compareDeft) {
-                            currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                    for (byte[] currentResult : currentResultList) {
+                        if (useDeft) {
+                            currentResult = Deft.optimiseDeflateStream(currentResult);
                         }
 
-                        if (PRINT_OPT_FINE) {
-                            System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
+                        if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
+                            compressedData = currentResult;
+
+                            if (compareDeft) {
+                                currentSizeBits = Deft.getSizeBitsFallback(compressedData);
+                            }
+
+                            if (PRINT_OPT_FINE) {
+                                System.out.println("Found new best, size " + (compareDeft ? currentSizeBits : currentResult.length));
+                            }
                         }
                     }
                 } catch (final Exception e) {
