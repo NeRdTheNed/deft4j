@@ -57,6 +57,7 @@ public class GZFile implements DeflateFilesContainer {
 
         if ((flags & FEXTRA) != 0) {
             final int xlen = is.read() + (is.read() << 8);
+            extra = new GZipExtraFormat();
             extra.xlength = xlen;
             extra.data = new byte[xlen];
             is.read(extra.data, 0, xlen);
