@@ -4,6 +4,7 @@ import static lu.luz.jzopfli.Zopfli_lib.ZopfliCompress;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import lu.luz.jzopfli.ZopfliH.ZopfliFormat;
@@ -105,7 +106,8 @@ public class MultiJZopfliCompressor implements MultiCompressor<ZopfliOptions> {
         final int[] outputSize = {0};
         ZopfliCompress(jzOptions, ZopfliFormat.ZOPFLI_FORMAT_DEFLATE, uncompressedData, uncompressedData.length, compressedData, outputSize);
         // TODO Verify data integrity
-        return compressedData[0];
+        final int outputCompSize = outputSize[0];
+        return compressedData[0].length == outputCompSize ? compressedData[0] : Arrays.copyOf(compressedData[0], outputCompSize);
     }
 
     @Override
