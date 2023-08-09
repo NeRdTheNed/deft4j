@@ -13,13 +13,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Set up JDK 8 & 17
+      - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: |
-            8
-            17
+          java-version: 8
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Build with Gradle
@@ -31,7 +29,11 @@ jobs:
           cache-disabled: true
           arguments: build --scan --stacktrace --warning-mode all
       - name: Optimise built jar file
-        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=CHEAP ./deft4j-cmd/build/libs/deft4j-cmd-all.jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
+        run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=CHEAP ./deft4j-cmd/build/libs/deft4j-cmd-all.jar ./deft4j-cmd/build/libs/deft4j-cmd-all-opt.jar
+      - name: Optimise built jar file
+        run: |
+          rm ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
+          mv ./deft4j-cmd/build/libs/deft4j-cmd-all-opt.jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar
       - name: Optimise built jar file
         run: java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise --mode=CHEAP ./deft4j-cmd/build/libs/deft4j-cmd.jar ./deft4j-cmd/build/libs/deft4j-cmd.jar
       - name: Draft release
