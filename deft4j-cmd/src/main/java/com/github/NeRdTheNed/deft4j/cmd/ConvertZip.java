@@ -43,9 +43,8 @@ class ConvertZip implements Callable<Integer> {
         List<GZFile> converted = null;
 
         try
-            (final InputStream is = new BufferedInputStream(Files.newInputStream(inputFile))) {
-            final ZipFile zip = new ZipFile();
-
+            (final InputStream is = new BufferedInputStream(Files.newInputStream(inputFile));
+                    final ZipFile zip = new ZipFile()) {
             if (!zip.read(is)) {
                 System.err.println("Failed to read input file");
             }
@@ -86,6 +85,7 @@ class ConvertZip implements Callable<Integer> {
                 }
 
                 System.out.println("Wrote " + output);
+                file.close();
             }
 
             noErr = true;

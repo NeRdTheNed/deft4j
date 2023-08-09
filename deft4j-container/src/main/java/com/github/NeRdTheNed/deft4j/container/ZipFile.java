@@ -131,4 +131,9 @@ public class ZipFile implements DeflateFilesContainer {
         return "Zip";
     }
 
+    @Override
+    public void close() throws IOException {
+        archive.close();
+    }
+
 }

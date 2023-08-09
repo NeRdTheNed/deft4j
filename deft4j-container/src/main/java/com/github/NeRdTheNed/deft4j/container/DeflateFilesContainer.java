@@ -2,6 +2,7 @@ package com.github.NeRdTheNed.deft4j.container;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,7 +11,7 @@ import java.util.List;
 import com.github.NeRdTheNed.deft4j.Deft;
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 
-public interface DeflateFilesContainer {
+public interface DeflateFilesContainer extends Closeable {
     boolean RECALC = true;
 
     /** Optimise all given streams. Returns the total amount of bits saved. */
@@ -92,4 +93,9 @@ public interface DeflateFilesContainer {
     }
 
     String fileType();
+
+    @Override
+    default void close() throws IOException {
+        // This space left intentionally blank
+    }
 }

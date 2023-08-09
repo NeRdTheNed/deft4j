@@ -314,4 +314,13 @@ public class PNGFile implements DeflateFilesContainer {
         return "PNG";
     }
 
+    @Override
+    public void close() throws IOException {
+        idat.close();
+
+        for (final DeflateFilesContainer container : deflateStreamMapNonIDAT.values()) {
+            container.close();
+        }
+    }
+
 }

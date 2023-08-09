@@ -141,8 +141,8 @@ public class CMDUtil {
 
         try
             (final InputStream is = new BufferedInputStream(Files.newInputStream(input));
-                    final OutputStream os = new BufferedOutputStream(Files.newOutputStream(possibleTempPath))) {
-            final DeflateFilesContainer container = raw ? new RawDeflateFile() : format != null ? ContainerUtil.getContainerForExt(format) : ContainerUtil.getContainerForPath(input);
+                    final OutputStream os = new BufferedOutputStream(Files.newOutputStream(possibleTempPath));
+                    final DeflateFilesContainer container = raw ? new RawDeflateFile() : format != null ? ContainerUtil.getContainerForExt(format) : ContainerUtil.getContainerForPath(input)) {
             returnVal = optimise(is, os, container);
 
             if (!returnVal) {
