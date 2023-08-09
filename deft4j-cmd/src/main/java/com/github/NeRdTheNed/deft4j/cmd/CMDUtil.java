@@ -153,8 +153,17 @@ public class CMDUtil {
             e.printStackTrace();
         }
 
-        if (returnVal && overwrite) {
-            Files.copy(possibleTempPath, output, StandardCopyOption.REPLACE_EXISTING);
+        if (overwrite) {
+            if (returnVal) {
+                Files.copy(possibleTempPath, output, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            try {
+                Files.deleteIfExists(possibleTempPath);
+            } catch (final Exception e) {
+                System.err.println("Issue deleting temporary file " + possibleTempPath);
+                e.printStackTrace();
+            }
         }
 
         return returnVal;
