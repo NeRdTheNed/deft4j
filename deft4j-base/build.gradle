@@ -50,7 +50,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.github.NeRdTheNed.deft4j'
             artifactId = 'deft4j-base'
-            version = '1.0.0-beta-2'
+            version = '1.0.0-beta-4'
 
             from components.java
         }
