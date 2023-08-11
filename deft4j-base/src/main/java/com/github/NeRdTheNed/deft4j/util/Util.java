@@ -90,7 +90,7 @@ public final class Util {
     /** Gets n least significant bits */
     public static long lsb(long x, int n) {
         assert n <= 63;
-        return x & ((1L << n) - 1);
+        return x & ((1L << n) - 1L);
     }
 
     /** Gets a printable string representation of a character array similar to Arrays.toString */
@@ -166,7 +166,7 @@ public final class Util {
 
     /** Reverses the byte order, truncating to 32 bits */
     public static long revByteOrder32(long val) {
-        return ((val & 0xFF) << 24) | (((val >>> 8) & 0xFF) << 16) | (((val >>> 16) & 0xFF) << 8) | ((val >>> 24) & 0xFF);
+        return ((val & 0xFFL) << 24) | (((val >>> 8) & 0xFFL) << 16) | (((val >>> 16) & 0xFFL) << 8) | ((val >>> 24) & 0xFFL);
     }
 
     /** C-style-ish strlen */
