@@ -24,7 +24,7 @@ class Optimise implements Callable<Integer> {
     @Option(names = { "--raw", "-r" }, defaultValue = "false", description = "Ignore file format, treat input as a raw deflate stream")
     private boolean raw;
 
-    @Option(names = { "--recompress-mode", "--mode", "-m" }, defaultValue = "NONE", description = "Enable various levels of recompression. Valid values: ${COMPLETION-CANDIDATES}")
+    @Option(names = { "--recompress-mode", "--mode", "-m" }, defaultValue = "NONE", description = "Enable various levels of recompression. Default: ${DEFAULT-VALUE}. Valid values: ${COMPLETION-CANDIDATES}")
     private RecompressMode recompressMode;
 
     @Override
