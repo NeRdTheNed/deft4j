@@ -89,9 +89,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         if (decodedData.length < (dataPos + 1)) {
             // Haha malloc go brrr
-            final byte[] newArr = new byte[decodedData.length * 2];
-            System.arraycopy(decodedData, 0, newArr, 0, decodedData.length);
-            decodedData = newArr;
+            decodedData = Arrays.copyOf(decodedData, decodedData.length * 2);
         }
 
         decodedData[(int) dataPos] = (byte) val;
