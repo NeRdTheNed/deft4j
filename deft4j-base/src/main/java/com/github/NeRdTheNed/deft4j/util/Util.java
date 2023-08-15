@@ -141,11 +141,10 @@ public final class Util {
     /** Read a C-style null terminated String from an InputStream */
     public static String readStr(InputStream is) throws IOException {
         final ByteArrayOutputStream boas = new ByteArrayOutputStream();
-        int read = is.read();
+        int read;
 
-        while (read != 0) {
+        while ((read = is.read()) != 0) {
             boas.write(read);
-            read = is.read();
         }
 
         return boas.toString();
