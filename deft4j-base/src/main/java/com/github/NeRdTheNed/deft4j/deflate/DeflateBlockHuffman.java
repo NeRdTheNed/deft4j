@@ -64,7 +64,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     @Override
     byte[] readSlice(long backDist, long len, long offset) {
         if (!finishedDec) {
-            return readSlice(backDist, len, this, decodedData, (int) dataPos, offset);
+            return readSlice(backDist, len, this, decodedData, dataPos, offset);
         }
 
         return super.readSlice(backDist, len, offset);
@@ -508,7 +508,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
         //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
         codelenLengths = codeLenDec.table.codeLen;
         numCodelenLens = Constants.MAX_CODELEN_LENS;
-        dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
+        //dynamicHeaderSizeBits = 5L + 5L + 4L + (numCodelenLens * 3L);
+        dynamicHeaderSizeBits = 5L + 5L + 4L + (Constants.MAX_CODELEN_LENS * 3L);
         int i = 0;
         final Iterator<Integer> iter = repack.iterator();
         LitLen prePair = null;
@@ -622,7 +623,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         //System.arraycopy(codeLenDec.table.codeLen, 0, codelenLengths, 0, codeLenDec.table.codeLen.length);
         codelenLengths = codeLenDec.table.codeLen;
         removeDynHeaderTrailingZeroLenCodelens(false);
-        dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
+        dynamicHeaderSizeBits = 5L + 5L + 4L + (numCodelenLens * 3L);
 
         for (final LitLen rlePair : rlePairs) {
             dynamicHeaderSizeBits += getRLEPairSize(rlePair, codeLenDec);
@@ -891,7 +892,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             codelenLengths[Constants.codelen_lengths_order[i]] = (int) is.readBits(3);
         }
 
-        dynamicHeaderSizeBits = 5 + 5 + 4 + ((long) numCodelenLens * 3);
+        dynamicHeaderSizeBits = 5L + 5L + 4L + (numCodelenLens * 3L);
         codeLenDec = Huffman.ofCodelens(codelenLengths);
         // TODO temporary attempt at reducing memory use
         codelenLengths = codeLenDec.table.codeLen;
@@ -1129,8 +1130,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private boolean writeProlog(BitOutputStream os, boolean finalBlock) throws IOException {
-        final int finalBlockI = finalBlock ? 1 : 0;
-        os.writeNBits((type.ordinal() << 1) | finalBlockI, 3);
+        os.writeNBits((type.ordinal() << 1) | (finalBlock ? 1L : 0L), 3);
         return (type == DeflateBlockType.FIXED) || writeHuffCode(os);
     }
 
