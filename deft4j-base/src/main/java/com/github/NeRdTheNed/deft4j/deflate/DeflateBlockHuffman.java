@@ -921,7 +921,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     }
 
                     // 2 bits + 3
-                    int n = (int) is.readBits(2) + Constants.CODELEN_COPY_MIN;
+                    final int n = (int) is.readBits(2) + Constants.CODELEN_COPY_MIN;
                     dynamicHeaderSizeBits += 2;
                     dist = n;
                     assert (n >= Constants.CODELEN_COPY_MIN) && (n <= Constants.CODELEN_COPY_MAX);
@@ -931,19 +931,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     }
 
                     decodedVal = new byte[n];
-                    Arrays.fill(decodedVal, (byte) codeLengths[i - 1]);
-
-                    while (n-- != 0) {
-                        codeLengths[i] = codeLengths[i - 1];
-                        i++;
-                    }
-
+                    final byte prev = (byte) codeLengths[i - 1];
+                    Arrays.fill(decodedVal, prev);
+                    Arrays.fill(codeLengths, i, (i += n), prev);
                     break;
                 }
 
                 case Constants.CODELEN_ZEROS: {
                     // 3--10 zeros; 3 bits + 3
-                    int n = (int) is.readBits(3) + Constants.CODELEN_ZEROS_MIN;
+                    final int n = (int) is.readBits(3) + Constants.CODELEN_ZEROS_MIN;
                     dynamicHeaderSizeBits += 3;
                     dist = n;
                     assert (n >= Constants.CODELEN_ZEROS_MIN) &&
@@ -954,19 +950,13 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     }
 
                     decodedVal = new byte[n];
-                    Arrays.fill(decodedVal, (byte) 0);
-
-                    while (n-- != 0) {
-                        codeLengths[i] = 0;
-                        i++;
-                    }
-
+                    i += n;
                     break;
                 }
 
                 case Constants.CODELEN_ZEROS2: {
                     // 11--138 zeros; 7 bits + 138
-                    int n = (int) is.readBits(7) + Constants.CODELEN_ZEROS2_MIN;
+                    final int n = (int) is.readBits(7) + Constants.CODELEN_ZEROS2_MIN;
                     dynamicHeaderSizeBits += 7;
                     dist = n;
                     assert (n >= Constants.CODELEN_ZEROS2_MIN) &&
@@ -977,13 +967,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     }
 
                     decodedVal = new byte[n];
-                    Arrays.fill(decodedVal, (byte) 0);
-
-                    while (n-- != 0) {
-                        codeLengths[i] = 0;
-                        i++;
-                    }
-
+                    i += n;
                     break;
                 }
 
