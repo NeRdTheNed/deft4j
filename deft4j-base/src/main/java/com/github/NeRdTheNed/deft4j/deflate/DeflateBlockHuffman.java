@@ -73,7 +73,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     /** Read a slice of decompressed data from the current block or previous blocks, with overlapping backref support. Supports reading slices during decoding. */
     @Override
     byte[] readSlice(long backDist, long len) {
-        return readSlice(backDist, len, 0);
+        return readSlice(backDist, len, 0L);
     }
 
     private void writeTemp(byte[] vals) {
@@ -87,7 +87,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private void writeTemp(int val) {
         assert !finishedDec;
 
-        if (decodedData.length < (dataPos + 1)) {
+        if (decodedData.length < (dataPos + 1L)) {
             // Haha malloc go brrr
             decodedData = Arrays.copyOf(decodedData, decodedData.length * 2);
         }
@@ -99,7 +99,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private void startTemp() {
         assert !finishedDec;
         decodedData = new byte[0x100];
-        dataPos = 0;
+        dataPos = 0L;
     }
 
     private void finishTemp() {
@@ -110,7 +110,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private static int getLitLenSize(LitLen litlenThis, Huffman litlenDec, Huffman distDec) {
-        if (litlenThis.dist > 0) {
+        if (litlenThis.dist > 0L) {
             final long distance = litlenThis.dist;
             final long len = litlenThis.litlen;
             final long litlen = Constants.len2litlen[(int) len];
@@ -133,7 +133,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private static int getRLEPairSize(LitLen rlePair, Huffman codeLenDec) {
         int encodedSize = codeLenDec.getSymLen((int) rlePair.litlen);
 
-        if (rlePair.dist > 0) {
+        if (rlePair.dist > 0L) {
             switch ((int) rlePair.litlen) {
             case Constants.CODELEN_COPY: {
                 // 2 bits + 3
@@ -163,7 +163,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private static byte[] getRLEPairSlice(LitLen rlePair, LitLen prev) {
-        if (rlePair.dist <= 0) {
+        if (rlePair.dist <= 0L) {
             return new byte[] { (byte) rlePair.litlen };
         }
 
@@ -222,14 +222,14 @@ public class DeflateBlockHuffman extends DeflateBlock {
     private static long replaceWithLiteralsIfSmaller(List<LitLen> checkLitlens, Huffman decoder, Huffman distDec, boolean print, String optPrefix, boolean prune, boolean estimateOnly) {
         print = print && !estimateOnly;
         final boolean litLen = distDec != null;
-        long savedTotal = 0;
-        long seenRemove = 0;
+        long savedTotal = 0L;
+        long seenRemove = 0L;
         final ListIterator<LitLen> litIter = checkLitlens.listIterator();
         checkNext: while (litIter.hasNext()) {
             final LitLen check = litIter.next();
 
             // Replace matches with literals if smaller
-            if (check.dist != 0) {
+            if (check.dist != 0L) {
                 assert check.decodedVal != null;
                 final int checkSize = litLen ? getLitLenSize(check, decoder, distDec) : getRLEPairSize(check, decoder);
                 final int arrSize = check.decodedVal.length;
@@ -289,8 +289,8 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
         }
 
-        if (estimateOnly && (savedTotal <= 0) && (seenRemove <= 0)) {
-            return -1;
+        if (estimateOnly && (savedTotal <= 0L) && (seenRemove <= 0L)) {
+            return -1L;
         }
 
         return savedTotal;
@@ -311,7 +311,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private void replaceBackrefsWithLiteralsIfSmaller(boolean prune, boolean print) {
-        if (replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune, true) >= 0) {
+        if (replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune, true) >= 0L) {
             ensureDidCopyLitLens();
             final long savedLitlens = replaceWithLiteralsIfSmaller(litlens, litlenDec, distDec, print, DEBUG_PRINT_OPT_REFREPLACE_STR, prune, false);
             sizeBits -= savedLitlens;
@@ -324,9 +324,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
             return;
         }
 
-        long savedHeader = 0;
+        long savedHeader = 0L;
 
-        if (replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, true) >= 0) {
+        if (replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, true) >= 0L) {
             ensureDidCopyRLEPairs();
             savedHeader += replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
         }
@@ -338,7 +338,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     /** Removes trailing zero-length codelens from the codelen lengths */
     private long removeDynHeaderTrailingZeroLenCodelens(boolean print) {
         if (type != DeflateBlockType.DYNAMIC) {
-            return 0;
+            return 0L;
         }
 
         int lastZero = -1;
@@ -361,10 +361,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 System.out.println(DEBUG_PRINT_OPT_UNUSED_CODELENS_STR + "Removed zero length code " + Constants.codelen_lengths_order[lastZero] + " at index " + lastZero);
             }
 
-            return 3 + removeDynHeaderTrailingZeroLenCodelens(print);
+            return 3L + removeDynHeaderTrailingZeroLenCodelens(print);
         }
 
-        return 0;
+        return 0L;
     }
 
     private void removeTrailingHeaderCodes(boolean print) {
@@ -386,7 +386,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         final boolean[] litNoAllow = new boolean[Constants.MAX_DIST_LENS];
         final boolean[] litSeen = new boolean[Constants.MAX_DIST_LENS];
         checkNext: for (final LitLen check : litlens) {
-            if (check.dist != 0) {
+            if (check.dist != 0L) {
                 assert check.decodedVal != null;
                 final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
                 litSeen[litlen] = true;
@@ -439,7 +439,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             while (litIter.hasNext()) {
                 final LitLen check = litIter.next();
 
-                if (check.dist != 0) {
+                if (check.dist != 0L) {
                     assert check.decodedVal != null;
                     final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
 
@@ -497,7 +497,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         sizeBits -= dynamicHeaderSizeBits;
-        dynamicHeaderSizeBits = 0;
+        dynamicHeaderSizeBits = 0L;
         numLitlenLens = litlenDec.table.codeLen.length;
         numDistLens = distDec.table.codeLen.length;
         rlePairs = new ArrayList<>();
@@ -586,7 +586,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         sizeBits -= dynamicHeaderSizeBits;
-        dynamicHeaderSizeBits = 0;
+        dynamicHeaderSizeBits = 0L;
         final Collection<Integer> lengths = new ArrayList<>();
         /*numLitlenLens = 0;
         numDistLens = 0;
@@ -609,7 +609,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         for (final LitLen rlePair : rlePairs) {
             lengths.add((int) rlePair.litlen);
 
-            if (rlePair.dist > 0) {
+            if (rlePair.dist > 0L) {
                 lengths.add((int) rlePair.dist);
                 rleTotal += (int) rlePair.dist;
             } else {
@@ -645,7 +645,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         sizeBits -= dynamicHeaderSizeBits;
         type = DeflateBlockType.FIXED;
-        dynamicHeaderSizeBits = 0;
+        dynamicHeaderSizeBits = 0L;
         codeLenDec = null;
         numLitlenLens = 0;
         numDistLens = 0;
@@ -676,7 +676,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         final int[] distFreqTemp = new int[Constants.MAX_DIST_LENS - 2];
 
         for (final LitLen litlenThis : litlens) {
-            if (litlenThis.dist > 0) {
+            if (litlenThis.dist > 0L) {
                 litFreqTemp[Constants.len2litlen[(int) litlenThis.litlen]]++;
                 distFreqTemp[Constants.distance2dist(litlenThis.dist)]++;
             } else {
@@ -755,7 +755,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         litlenDec = newLitlenDec;
         distDec = newDistDec;
         sizeBits -= litlenSizeBits;
-        litlenSizeBits = 0;
+        litlenSizeBits = 0L;
 
         for (final LitLen litlenThis : litlens) {
             litlenSizeBits += getLitLenSize(litlenThis, litlenDec, distDec);
@@ -826,7 +826,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             long len   = Constants.litlen_tbl[litlen - Constants.LITLEN_TBL_OFFSET].baseLen;
             long ebits = Constants.litlen_tbl[litlen - Constants.LITLEN_TBL_OFFSET].ebits;
 
-            if (ebits != 0) {
+            if (ebits != 0L) {
                 totalSize += ebits;
                 len += is.readBits((int) ebits);
             }
@@ -845,7 +845,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             long dist  = Constants.dist_tbl[distsym].baseDist;
             ebits = Constants.dist_tbl[distsym].ebits;
 
-            if (ebits != 0) {
+            if (ebits != 0L) {
                 totalSize += ebits;
                 dist += is.readBits((int) ebits);
             }
@@ -923,7 +923,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
                     // 2 bits + 3
                     final int n = (int) is.readBits(2) + Constants.CODELEN_COPY_MIN;
-                    dynamicHeaderSizeBits += 2;
+                    dynamicHeaderSizeBits += 2L;
                     dist = n;
                     assert (n >= Constants.CODELEN_COPY_MIN) && (n <= Constants.CODELEN_COPY_MAX);
 
@@ -941,7 +941,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 case Constants.CODELEN_ZEROS: {
                     // 3--10 zeros; 3 bits + 3
                     final int n = (int) is.readBits(3) + Constants.CODELEN_ZEROS_MIN;
-                    dynamicHeaderSizeBits += 3;
+                    dynamicHeaderSizeBits += 3L;
                     dist = n;
                     assert (n >= Constants.CODELEN_ZEROS_MIN) &&
                     (n <= Constants.CODELEN_ZEROS_MAX);
@@ -958,7 +958,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 case Constants.CODELEN_ZEROS2: {
                     // 11--138 zeros; 7 bits + 138
                     final int n = (int) is.readBits(7) + Constants.CODELEN_ZEROS2_MIN;
-                    dynamicHeaderSizeBits += 7;
+                    dynamicHeaderSizeBits += 7L;
                     dist = n;
                     assert (n >= Constants.CODELEN_ZEROS2_MIN) &&
                     (n <= Constants.CODELEN_ZEROS2_MAX);
@@ -1001,7 +1001,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
     @Override
     public boolean parse(BitInputStream is) throws IOException {
-        sizeBits = 0;
+        sizeBits = 0L;
 
         if (type == DeflateBlockType.DYNAMIC) {
             if (!initDynamicDecoder(is)) {
@@ -1038,7 +1038,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             final long sym = rlePair.litlen;
             os.writeNBits(codeLenDec.getSym((int) sym), codeLenDec.getSymLen((int) sym));
 
-            if (rlePair.dist == 0) {
+            if (rlePair.dist == 0L) {
                 i++;
                 assert sym <= Constants.CODELEN_MAX_LIT;
             } else {
@@ -1114,7 +1114,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
     }
 
     private void writeLitLen(BitOutputStream os, LitLen litlenThis) throws IOException {
-        if (litlenThis.dist == 0) {
+        if (litlenThis.dist == 0L) {
             writeSym(os, litlenThis.litlen);
         } else {
             writeBackref(os, litlenThis.litlen, litlenThis.dist);
