@@ -87,6 +87,10 @@ public final class ContainerUtil {
 
     /** Attempts to detect the format of a file, and returns a container suitable for reading it with */
     public static DeflateFilesContainer getContainerForPath(Path path) {
+        if (!Files.isRegularFile(path)) {
+            return null;
+        }
+
         final String detectedMagic = detectFormat(path);
 
         if (detectedMagic != null) {

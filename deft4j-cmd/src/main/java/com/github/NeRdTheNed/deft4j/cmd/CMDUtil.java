@@ -49,6 +49,11 @@ public class CMDUtil {
 
     /** Read from the given input stream into the container, optimise, and write to the output stream */
     private boolean optimise(InputStream is, OutputStream os, DeflateFilesContainer container) throws IOException {
+        if (container == null) {
+            System.err.println("Invalid file container");
+            return false;
+        }
+
         if (container.read(is)) {
             System.out.println("File type recognised as " + container.fileType());
 
