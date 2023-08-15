@@ -38,8 +38,11 @@ class OptimiseFolder implements Callable<Integer> {
                     continue;
                 }
 
+                System.out.println("Optimising file " + overwriteInput);
+
                 try {
                     if (!deft.optimiseFile(overwriteInput, overwriteInput, null, false)) {
+                        System.err.println("Error when optimising file " + overwriteInput);
                         didOpt = false;
                     }
                 } catch (final Exception e) {
