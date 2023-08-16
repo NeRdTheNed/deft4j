@@ -80,10 +80,10 @@ public interface DeflateFilesContainer extends Closeable {
 
         for (defStream = 0; defStream < size; defStream++) {
             final DeflateStream stream = streams.get(defStream);
-            sb.append("Stream ").append(defStream).append('\n').append(getStreamInfo(stream));
+            sb.append("Stream ").append(defStream).append('\n').append(getStreamInfo(stream)).append('\n');
         }
 
-        sb.append("\nTotal streams: ").append(defStream);
+        sb.append("Total streams: ").append(defStream);
         return sb.toString();
     }
 
