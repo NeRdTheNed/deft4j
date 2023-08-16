@@ -932,7 +932,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     decodedVal = new byte[n];
                     final byte prev = (byte) codeLengths[i - 1];
                     Arrays.fill(decodedVal, prev);
-                    Arrays.fill(codeLengths, i, (i += n), prev);
+                    Arrays.fill(codeLengths, i, i += n, prev);
                     break;
                 }
 
