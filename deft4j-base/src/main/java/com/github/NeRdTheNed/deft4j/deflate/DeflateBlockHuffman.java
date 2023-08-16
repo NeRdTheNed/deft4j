@@ -271,8 +271,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
                     for (int i = 0; i < arrSize; i++) {
                         final byte bNeg = check.decodedVal[i];
-                        final int b = bNeg & 0xFF;
-                        final LitLen rep = new LitLen(b);
+                        final LitLen rep = new LitLen(bNeg & 0xFF);
                         rep.decodedVal = new byte[] { bNeg };
 
                         if (DEBUG_PRINT_OPT_REFREPLACE && print) {
@@ -324,15 +323,12 @@ public class DeflateBlockHuffman extends DeflateBlock {
             return;
         }
 
-        long savedHeader = 0L;
-
         if (replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, true) >= 0L) {
             ensureDidCopyRLEPairs();
-            savedHeader += replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+            final long savedHeader = replaceWithLiteralsIfSmaller(rlePairs, codeLenDec, null, print, DEBUG_PRINT_OPT_RUNREPLACE_STR, prune, false);
+            sizeBits -= savedHeader;
+            dynamicHeaderSizeBits -= savedHeader;
         }
-
-        sizeBits -= savedHeader;
-        dynamicHeaderSizeBits -= savedHeader;
     }
 
     /** Removes trailing zero-length codelens from the codelen lengths */
@@ -399,8 +395,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                 int totalSize = 0;
 
                 for (final byte value : check.decodedVal) {
-                    final int b = value & 0xFF;
-                    final int bSize = litlenDec.getSymLen(b);
+                    final int bSize = litlenDec.getSymLen(value & 0xFF);
 
                     if (bSize < 1) {
                         // No symbol for this literal, can't remove
@@ -450,8 +445,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     litIter.remove();
 
                     for (final byte bNeg : check.decodedVal) {
-                        final int b = bNeg & 0xFF;
-                        final LitLen rep = new LitLen(b);
+                        final LitLen rep = new LitLen(bNeg & 0xFF);
                         rep.decodedVal = new byte[] { bNeg };
                         litIter.add(rep);
                     }
@@ -513,13 +507,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
         int i = 0;
         final Iterator<Integer> iter = repack.iterator();
         LitLen prePair = null;
+        final int combinedLens = numLitlenLens + numDistLens;
 
-        while (i < (numLitlenLens + numDistLens)) {
+        while (i < combinedLens) {
             final int sym = iter.next();
-            int dist = 0;
+            int dist;
             byte[] decodedVal;
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
+                dist = 0;
                 decodedVal = new byte[] { (byte) sym };
                 i++;
             } else {
@@ -900,18 +896,20 @@ public class DeflateBlockHuffman extends DeflateBlock {
         rlePairs = new ArrayList<>();
         didCopyRLEPairs = true;
         int i = 0;
+        final int combinedLens = numLitlenLens + numDistLens;
 
-        while (i < (numLitlenLens + numDistLens)) {
+        while (i < combinedLens) {
             final DecodedSym decodedSym = codeLenDec.readSym(is);
             dynamicHeaderSizeBits += decodedSym.codeLen;
             final int sym = decodedSym.decoded;
-            int dist = 0;
+            final int dist;
             byte[] decodedVal;
 
             if ((sym >= 0) && (sym <= Constants.CODELEN_MAX_LIT)) {
                 // A literal codeword length
                 codeLengths[i] = sym;
                 i++;
+                dist = 0;
                 decodedVal = new byte[] { (byte) sym };
             } else {
                 switch (sym) {
@@ -927,7 +925,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     dist = n;
                     assert (n >= Constants.CODELEN_COPY_MIN) && (n <= Constants.CODELEN_COPY_MAX);
 
-                    if ((i + n) > (numLitlenLens + numDistLens)) {
+                    if ((i + n) > combinedLens) {
                         return false;
                     }
 
@@ -946,7 +944,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     assert (n >= Constants.CODELEN_ZEROS_MIN) &&
                     (n <= Constants.CODELEN_ZEROS_MAX);
 
-                    if ((i + n) > (numLitlenLens + numDistLens)) {
+                    if ((i + n) > combinedLens) {
                         return false;
                     }
 
@@ -963,7 +961,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
                     assert (n >= Constants.CODELEN_ZEROS2_MIN) &&
                     (n <= Constants.CODELEN_ZEROS2_MAX);
 
-                    if ((i + n) > (numLitlenLens + numDistLens)) {
+                    if ((i + n) > combinedLens) {
                         return false;
                     }
 
