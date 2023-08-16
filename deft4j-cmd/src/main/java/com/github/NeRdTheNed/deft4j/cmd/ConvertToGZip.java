@@ -11,17 +11,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.github.NeRdTheNed.deft4j.container.ContainerUtil;
+import com.github.NeRdTheNed.deft4j.container.DeflateFilesContainer;
 import com.github.NeRdTheNed.deft4j.container.GZFile;
-import com.github.NeRdTheNed.deft4j.container.ZipFile;
+import com.github.NeRdTheNed.deft4j.container.ToGZipConvertible;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "convert-zip", description = "Converts a given zip file to GZip files")
-class ConvertZip implements Callable<Integer> {
+@Command(name = "convert-to-gzip", aliases = { "convert-png", "convert-zip" }, description = "Converts a given file to GZip files")
+class ConvertToGZip implements Callable<Integer> {
 
-    @Parameters(index = "0", description = "The input zip file")
+    @Parameters(index = "0", description = "The input file")
     private Path inputFile;
 
     @Parameters(index = "1", description = "The directory to output files to")
@@ -44,14 +46,19 @@ class ConvertZip implements Callable<Integer> {
 
         try
             (final InputStream is = new BufferedInputStream(Files.newInputStream(inputFile));
-                    final ZipFile zip = new ZipFile()) {
-            if (!zip.read(is)) {
+                    final DeflateFilesContainer container = ContainerUtil.getContainerForPath(inputFile)) {
+            if (!container.read(is)) {
                 System.err.println("Failed to read input file");
             }
 
             System.out.println("Read input file " + inputFile);
-            converted = zip.asGZipFiles();
-            System.out.println("Converted to GZip, writing files...");
+
+            if (container instanceof ToGZipConvertible) {
+                converted = ((ToGZipConvertible) container).asGZipFiles();
+                System.out.println("Converted to GZip, writing files...");
+            } else {
+                System.out.println("Could not convert input file " + inputFile + " to GZip");
+            }
         } catch (final IOException e) {
             System.err.println("IOException thrown when reading file " + inputFile);
             e.printStackTrace();

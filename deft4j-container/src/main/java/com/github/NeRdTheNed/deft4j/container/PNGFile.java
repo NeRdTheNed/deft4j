@@ -8,12 +8,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.CRC32;
 
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
-public class PNGFile implements DeflateFilesContainer {
+public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
     class PNGChunk {
         final byte[] type = new byte[4];
         byte[] data;
@@ -177,6 +178,35 @@ public class PNGFile implements DeflateFilesContainer {
 
     /** Cached CRC32 calculator */
     private final CRC32 crc32Calc = new CRC32();
+
+    @Override
+    public List<GZFile> asGZipFiles() throws IOException {
+        final List<GZFile> converted = new ArrayList<>();
+        final GZFile idatGZ = new GZFile();
+        idatGZ.setData(idat.deflateStream);
+        idatGZ.setFilename("IDAT");
+        converted.add(idatGZ);
+        final Map<String, Integer> seenChunks = new HashMap<>();
+
+        for (final Entry<PNGChunk, DeflateFilesContainer> entry : deflateStreamMapNonIDAT.entrySet()) {
+            final PNGChunk chunk = entry.getKey();
+            final DeflateFilesContainer container = entry.getValue();
+            final String type = chunk.type();
+            final int seen = seenChunks.merge(type, 1, Integer::sum);
+            final List<DeflateStream> streams = container.getDeflateStreams();
+            final int streamsSize = streams.size();
+
+            for (int i = 0; i < streamsSize; i++) {
+                final String name = type + "-num-" + seen + "-stream-" + i;
+                final GZFile chunkGZ = new GZFile();
+                chunkGZ.setData(streams.get(i));
+                chunkGZ.setFilename(name);
+                converted.add(chunkGZ);
+            }
+        }
+
+        return converted;
+    }
 
     private void syncStreams() throws IOException {
         // Find the first IDAT chunk, and store the index

@@ -24,10 +24,11 @@ import software.coley.lljzip.format.write.ZipWriter;
 import software.coley.lljzip.util.BufferData;
 import software.coley.lljzip.util.ByteDataUtil;
 
-public class ZipFile implements DeflateFilesContainer {
+public class ZipFile implements DeflateFilesContainer, ToGZipConvertible {
     private Map<LocalFileHeader, DeflateStream> deflateStreamMap;
     private ZipArchive archive;
 
+    @Override
     public List<GZFile> asGZipFiles() throws IOException {
         final List<GZFile> converted = new ArrayList<>();
 
