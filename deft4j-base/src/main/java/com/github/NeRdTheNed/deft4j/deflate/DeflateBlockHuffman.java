@@ -664,7 +664,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
      * Set this to 1 to work around a bug with Zlib 1.2.1 and older.
      * Set this to 2 to work around other buggy decoders.
      */
-    private static final int MIN_DIST_CODES = 2;
+    private static final int MIN_DIST_CODES = 0;
     private static final int MIN_LIT_CODES = 0;
 
     public void recodeHuffman() {
