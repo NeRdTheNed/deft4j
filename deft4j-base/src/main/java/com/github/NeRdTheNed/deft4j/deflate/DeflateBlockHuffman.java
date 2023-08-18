@@ -706,6 +706,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         final int[] litFreq = Arrays.copyOf(litFreqTemp, lastNonZeroLit);
         final int[] distFreq = Arrays.copyOf(distFreqTemp, lastNonZeroDist);
+        final boolean handleZero = (MIN_DIST_CODES == 0) && (realLastNonZeroDist == 0);
         int i = 0;
 
         while (realLastNonZeroLit < MIN_LIT_CODES) {
@@ -729,7 +730,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         final Huffman newLit = new Huffman(new HuffmanTree(litFreq, 15).getTable());
-        final Huffman newDist = new Huffman(new HuffmanTree(distFreq, 15).getTable());
+        final Huffman newDist = handleZero ? new Huffman(new HuffmanTable(1)) : new Huffman(new HuffmanTree(distFreq, 15).getTable());
         recodeToHuffman(newLit, newDist);
     }
 
