@@ -50,7 +50,7 @@ public class HuffmanTree {
         int index = 0;
 
         while (queue.size() < 2) {
-            if (freq[index] == 0) {
+            if ((index >= numSymbols) || (freq[index] == 0)) {
                 queue.add(new LeafNode(index, 1));
             }
 
@@ -179,9 +179,12 @@ public class HuffmanTree {
 
             // Assign codes to leaves
             for (final LeafNode leaf : leaves) {
-                code[leaf.value] = nextCode;
+                if (leaf.value < numSymbols) {
+                    code[leaf.value] = nextCode;
+                    codelen[leaf.value] = length;
+                }
+
                 nextCode++;
-                codelen[leaf.value] = length;
             }
         }
 
