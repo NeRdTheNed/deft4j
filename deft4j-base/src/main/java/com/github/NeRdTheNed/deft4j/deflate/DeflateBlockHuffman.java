@@ -730,7 +730,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
         }
 
         final Huffman newLit = new Huffman(new HuffmanTree(litFreq, 15).getTable());
-        final Huffman newDist = handleZero ? new Huffman(new HuffmanTable(1)) : new Huffman(new HuffmanTree(distFreq, 15).getTable());
+        // TODO This code isn't good
+        final boolean handleOne = !handleZero && (MIN_DIST_CODES <= 1) && (Util.checkNonZero(distFreq) <= 1);
+        final Huffman newDist = (handleZero || handleOne) ? new Huffman(new HuffmanTable(handleZero ? 1 : realLastNonZeroDist)) : new Huffman(new HuffmanTree(distFreq, 15).getTable());
+
+        if (handleOne) {
+            newDist.table.codeLen[realLastNonZeroDist - 1] = 1;
+            newDist.table.code[realLastNonZeroDist - 1] = 0;
+        }
+
         recodeToHuffman(newLit, newDist);
     }
 

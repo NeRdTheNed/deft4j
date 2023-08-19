@@ -38,6 +38,32 @@ public final class Util {
         return true;
     }
 
+    /** Count number of non-zero values in the array */
+    public static int checkNonZero(byte[] bytes) {
+        int count = 0;
+
+        for (final byte b : bytes) {
+            if (b != 0) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /** Count number of non-zero values in the array */
+    public static int checkNonZero(int[] ints) {
+        int count = 0;
+
+        for (final int i : ints) {
+            if (i != 0) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     /** Creates a new array with the contents of both arrays */
     public static int[] combine(int[] a1, int[] a2) {
         final int[] combined = Arrays.copyOf(a1, a1.length + a2.length);
