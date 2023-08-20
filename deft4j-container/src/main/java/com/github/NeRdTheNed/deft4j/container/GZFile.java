@@ -26,7 +26,7 @@ public class GZFile implements DeflateFilesContainer {
     private int flags;
     private long time;
     private int extraFlags;
-    private int os;
+    private int os = 255;
 
     private GZipExtraFormat extra;
     private String filename;
