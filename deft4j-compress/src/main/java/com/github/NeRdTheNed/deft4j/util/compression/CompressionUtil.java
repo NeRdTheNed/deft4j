@@ -78,12 +78,16 @@ public class CompressionUtil {
         this.compareDeft = compareDeft;
     }
 
-    private CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
         this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft, compareDeft);
     }
 
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, boolean useDeft, boolean compareDeft) {
+        this(java, jzlib, jzopfli, cafeundzopfli, iter, mode, JZOPFLI_DEFAULT_SPLIT, useDeft, compareDeft);
+    }
+
     public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, Strategy mode, boolean useDeft, boolean compareDeft) {
-        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, JZOPFLI_DEFAULT_SPLIT, useDeft, compareDeft);
+        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, useDeft, compareDeft);
     }
 
     private Supplier<ExecutorService> execService = () -> {
