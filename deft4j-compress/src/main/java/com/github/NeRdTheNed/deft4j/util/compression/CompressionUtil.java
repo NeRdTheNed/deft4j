@@ -106,7 +106,7 @@ public class CompressionUtil {
             int tasks = 0;
 
             for (final Compressor compressor : compressors) {
-                compService.submit(new CompressorTask(compressor, uncompressedData));
+                compService.submit(new CompressorTask(compressor, uncompressedData, useDeft));
                 tasks++;
             }
 
@@ -115,11 +115,7 @@ public class CompressionUtil {
                     final Future<byte[][]> result = compService.take();
                     final byte[][] currentResultList = result.get();
 
-                    for (byte[] currentResult : currentResultList) {
-                        if (useDeft) {
-                            currentResult = Deft.optimiseDeflateStream(currentResult);
-                        }
-
+                    for (final byte[] currentResult : currentResultList) {
                         if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {
                             compressedData = currentResult;
 
