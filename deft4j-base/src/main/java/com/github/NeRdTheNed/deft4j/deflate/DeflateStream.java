@@ -371,7 +371,11 @@ public class DeflateStream {
 
         if (toOptimise.getDeflateBlockType() != DeflateBlockType.STORED) {
             // Uncompressed
-            callback.accept(new Pair<>(toOptimise.asUncompressed(), "uncompressed"));
+            final DeflateBlockUncompressed stored = toOptimise.asUncompressed();
+
+            if (stored.getUncompressedData().length <= 65535) {
+                callback.accept(new Pair<>(stored, "uncompressed"));
+            }
         }
 
         DeflateBlockHuffman toOptimiseHuffman = null;
