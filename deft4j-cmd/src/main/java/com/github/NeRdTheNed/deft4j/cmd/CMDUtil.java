@@ -75,7 +75,7 @@ public class CMDUtil {
                 for (int i = 0; i < size; i++) {
                     final DeflateStream stream = streams.get(i);
                     final byte[] uncompressed = stream.getUncompressedData();
-                    final byte[] recompresed = compUtil.compress(uncompressed, false);
+                    final byte[] recompresed = compUtil.compress(uncompressed, true);
                     final DeflateStream recompStream = new DeflateStream();
                     final ByteArrayInputStream bais = new ByteArrayInputStream(recompresed);
 
