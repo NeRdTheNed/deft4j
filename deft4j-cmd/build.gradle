@@ -66,7 +66,7 @@ build.finalizedBy(jartighten)
 
 dependencies {
     // picocli
-    implementation 'info.picocli:picocli:4.7.4'
+    implementation 'info.picocli:picocli:4.7.5'
 
     // deft4j
     implementation project(':deft4j-base')
