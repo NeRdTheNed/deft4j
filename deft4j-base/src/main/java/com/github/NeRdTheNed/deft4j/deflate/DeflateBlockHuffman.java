@@ -837,6 +837,15 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
 
             assert (len >= Constants.MIN_LEN) && (len <= Constants.MAX_LEN);
+
+            // TODO: Proper fix, see https://github.com/NeRdTheNed/deft4j/issues/1
+            // The Deflate specification doesn't specify if distance codes with length 258 using code 284 are allowed.
+            // deft4j doesn't currently handle such codes correctly.
+            if ((len == Constants.MAX_LEN) && (litlen == 284)) {
+                System.out.println("deft4j issue: Deflate specification edge case encountered when parsing input file.");
+                return false;
+            }
+
             // Get the distance
             final DecodedSym distsymDecSym = distDec.readSym(is);
             final int distsym = distsymDecSym.decoded;
