@@ -113,7 +113,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         if (litlenThis.dist > 0L) {
             final long distance = litlenThis.dist;
             final long len = litlenThis.litlen;
-            final long litlen = Constants.len2litlen[(int) len];
+            final long litlen = Constants.len2litlen((int) len, litlenThis.edgecase);
             // litlen bits
             long nbits = litlenDec.getSymLen((int) litlen);
             // ebits
@@ -384,7 +384,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         checkNext: for (final LitLen check : litlens) {
             if (check.dist != 0L) {
                 assert check.decodedVal != null;
-                final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
+                final int litlen = Constants.len2litlen((int) check.litlen, check.edgecase) - Constants.LITLEN_TBL_OFFSET;
                 litSeen[litlen] = true;
 
                 if (litNoAllow[litlen]) {
@@ -436,7 +436,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
                 if (check.dist != 0L) {
                     assert check.decodedVal != null;
-                    final int litlen = Constants.len2litlen[(int) check.litlen] - Constants.LITLEN_TBL_OFFSET;
+                    final int litlen = Constants.len2litlen((int) check.litlen, check.edgecase) - Constants.LITLEN_TBL_OFFSET;
 
                     if (litlen != litlenRem) {
                         continue;
@@ -673,7 +673,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
 
         for (final LitLen litlenThis : litlens) {
             if (litlenThis.dist > 0L) {
-                litFreqTemp[Constants.len2litlen[(int) litlenThis.litlen]]++;
+                litFreqTemp[Constants.len2litlen((int) litlenThis.litlen, litlenThis.edgecase)]++;
                 distFreqTemp[Constants.distance2dist(litlenThis.dist)]++;
             } else {
                 litFreqTemp[(int) litlenThis.litlen]++;
@@ -837,13 +837,13 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
 
             assert (len >= Constants.MIN_LEN) && (len <= Constants.MAX_LEN);
+            // The Deflate specification doesn't specify if distance codes with length 258 using code 284 are allowed,
+            // but they're not explicitly forbidden.
+            // See https://github.com/NeRdTheNed/deft4j/issues/1
+            final boolean edgecase = (len == Constants.MAX_LEN) && (litlen == 284);
 
-            // TODO: Proper fix, see https://github.com/NeRdTheNed/deft4j/issues/1
-            // The Deflate specification doesn't specify if distance codes with length 258 using code 284 are allowed.
-            // deft4j doesn't currently handle such codes correctly.
-            if ((len == Constants.MAX_LEN) && (litlen == 284)) {
-                System.out.println("deft4j issue: Deflate specification edge case encountered when parsing input file.");
-                return false;
+            if (DEBUG_PRINT_PARSE && edgecase) {
+                System.out.println("Edge case: code 284 used for size 258");
             }
 
             // Get the distance
@@ -865,7 +865,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
             }
 
             assert (dist >= Constants.MIN_DISTANCE) && (dist <= Constants.MAX_DISTANCE);
-            final LitLen readLen = new LitLen(dist, len);
+            final LitLen readLen = new LitLen(dist, len, edgecase);
             sizeBits += totalSize;
             litlenSizeBits += totalSize;
 
@@ -1107,9 +1107,9 @@ public class DeflateBlockHuffman extends DeflateBlock {
         os.writeNBits(litlenDec.getSym((int) val), litlenDec.getSymLen((int) val));
     }
 
-    private void writeBackref(BitOutputStream os, long len, long distance) throws IOException {
+    private void writeBackref(BitOutputStream os, long len, long distance, boolean edgecase) throws IOException {
         // Back reference length
-        final long litlen = Constants.len2litlen[(int) len];
+        final long litlen = Constants.len2litlen((int) len, edgecase);
         // litlen bits
         long bits = litlenDec.getSym((int) litlen);
         long nbits = litlenDec.getSymLen((int) litlen);
@@ -1133,7 +1133,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         if (litlenThis.dist == 0L) {
             writeSym(os, litlenThis.litlen);
         } else {
-            writeBackref(os, litlenThis.litlen, litlenThis.dist);
+            writeBackref(os, litlenThis.litlen, litlenThis.dist, litlenThis.edgecase);
         }
     }
 

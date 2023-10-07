@@ -12,6 +12,16 @@ public final class Constants {
                : Constants.distance2dist_hi[(int) ((distance - 1) >> 7)];
     }
 
+    public static int len2litlen(int len, boolean edgecase) {
+        assert !edgecase || (len == Constants.MAX_LEN);
+
+        if (edgecase) {
+            return 284;
+        }
+
+        return len2litlen[len];
+    }
+
     public static final int LZZ_BACKREF_LEN = 32 * 1024;
 
     public static final int LITLEN_MAX = 285;
@@ -117,7 +127,7 @@ public final class Constants {
         /* 29 */ new DistancePair( 24577, 13 ),
     };
 
-    static final int[] len2litlen = {
+    private static final int[] len2litlen = {
         /*   0 */ 0xffff,
         /*   1 */ 0xffff,
         /*   2 */ 0xffff,

@@ -9,7 +9,7 @@ public class LitLen {
         final int prime = 31;
         int result = 1;
         result = (prime * result) + Arrays.hashCode(decodedVal);
-        return (prime * result) + Objects.hash(dist, litlen);
+        return (prime * result) + Objects.hash(dist, edgecase, litlen);
     }
 
     @Override
@@ -23,17 +23,23 @@ public class LitLen {
         }
 
         final LitLen other = (LitLen) obj;
-        return Arrays.equals(decodedVal, other.decodedVal) && (dist == other.dist) && (litlen == other.litlen);
+        return Arrays.equals(decodedVal, other.decodedVal) && (dist == other.dist) && (edgecase == other.edgecase) && (litlen == other.litlen);
     }
 
     public final long dist;
     public final long litlen;
+    public final boolean edgecase;
 
     public byte[] decodedVal;
 
-    public LitLen(long dist, long litlen) {
+    public LitLen(long dist, long litlen, boolean edgecase) {
         this.dist = dist;
         this.litlen = litlen;
+        this.edgecase = edgecase;
+    }
+
+    public LitLen(long dist, long litlen) {
+        this(dist, litlen, false);
     }
 
     public LitLen(long litlen) {
@@ -41,7 +47,7 @@ public class LitLen {
     }
 
     public LitLen copy() {
-        final LitLen newLit = new LitLen(dist, litlen);
+        final LitLen newLit = new LitLen(dist, litlen, edgecase);
 
         if (decodedVal != null) {
             //newLit.decodedVal = new byte[decodedVal.length];
@@ -54,6 +60,6 @@ public class LitLen {
 
     @Override
     public String toString() {
-        return "LitLen [litlen=" + litlen + ", dist=" + dist + ", decodedVal=" + Arrays.toString(decodedVal) + "]";
+        return "LitLen [litlen=" + litlen + ", dist=" + dist + ", edgecase=" + edgecase + ", decodedVal=" + Arrays.toString(decodedVal) + "]";
     }
 }
