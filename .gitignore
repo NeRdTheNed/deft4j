@@ -19,5 +19,8 @@ local.properties
 .loadpath
 .factorypath
 
+# IntelliJ IDEA
+.idea/
+
 # macOS junk files
 .DS_Store
