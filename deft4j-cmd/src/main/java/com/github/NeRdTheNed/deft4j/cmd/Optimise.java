@@ -27,9 +27,12 @@ class Optimise implements Callable<Integer> {
     @Option(names = { "--recompress-mode", "--mode", "-m" }, defaultValue = "NONE", description = "Enable various levels of recompression. Default: ${DEFAULT-VALUE}. Valid values: ${COMPLETION-CANDIDATES}")
     private RecompressMode recompressMode;
 
+    @Option(names = { "--zopfli-iter", "--iter", "-I" }, defaultValue = "20", description = "Zopfli iterations. More iterations increases time spent optimising files.")
+    int recompressZopfliPasses = 20;
+
     @Override
     public Integer call() throws Exception {
-        final CMDUtil deft = new CMDUtil(recompressMode);
+        final CMDUtil deft = new CMDUtil(recompressMode, recompressZopfliPasses);
         final boolean didOpt;
 
         try {
