@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.CRC32;
@@ -18,6 +19,7 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
     class PNGChunk {
         final byte[] type = new byte[4];
         byte[] data;
+        private long seqNum;
 
         boolean isIDAT() {
             return (type[0] == 'I') && (type[1] == 'D') && (type[2] == 'A') && (type[3] == 'T');
@@ -37,6 +39,36 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
 
         boolean isiTXt() {
             return (type[0] == 'i') && (type[1] == 'T') && (type[2] == 'X') && (type[3] == 't');
+        }
+
+        // APNG
+
+        boolean isacTL() {
+            return (type[0] == 'a') && (type[1] == 'c') && (type[2] == 'T') && (type[3] == 'L');
+        }
+
+        boolean isfcTL() {
+            return (type[0] == 'f') && (type[1] == 'c') && (type[2] == 'T') && (type[3] == 'L');
+        }
+
+        boolean isfdAT() {
+            return (type[0] == 'f') && (type[1] == 'd') && (type[2] == 'A') && (type[3] == 'T');
+        }
+
+        boolean hasSeq() {
+            return isfdAT() || isfcTL();
+        }
+
+        long getSeq() {
+            return seqNum;
+        }
+
+        void setSeq(long seqNum) {
+            this.seqNum = seqNum;
+            data[0] = (byte) ((seqNum >>> 24) & 0xff);
+            data[1] = (byte) ((seqNum >>> 16) & 0xff);
+            data[2] = (byte) ((seqNum >>> 8) & 0xff);
+            data[3] = (byte) (seqNum & 0xff);
         }
 
         boolean isZLibCompressedNonIdat() {
@@ -156,6 +188,14 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
                 data = new byte[] { };
             }
 
+            if (hasSeq()) {
+                seqNum = ((long)(data[0] & 0xff) << 24) + ((data[1] & 0xff) << 16) + ((data[2] & 0xff) << 8) + (data[3] & 0xff);
+
+                if (PRINT_CHUNK_INFO) {
+                    System.out.println("Sequence number " + seqNum);
+                }
+            }
+
             final long CRC32 = ((long)(is.read() & 0xff) << 24) + ((is.read() & 0xff) << 16) + ((is.read() & 0xff) << 8) + (is.read() & 0xff);
             crc32Calc.reset();
             crc32Calc.update(type);
@@ -241,6 +281,72 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
             toWrite -= toCopy;
         } while (toWrite > 0);
 
+        if (fdats != null) {
+            final ListIterator<PNGChunk> chunkIter = pngChunks.listIterator();
+
+            for (final ZLibFile fdat : fdats) {
+                int fdATIndex = -1;
+
+                while (chunkIter.hasNext()) {
+                    final PNGChunk chunk = chunkIter.next();
+
+                    if (fdATIndex == -1) {
+                        if (chunk.isfdAT()) {
+                            fdATIndex = chunkIter.previousIndex();
+                            chunkIter.remove();
+                            final ByteArrayOutputStream fbaos = new ByteArrayOutputStream();
+
+                            if (!fdat.write(fbaos)) {
+                                throw new IOException("Could not write fdAT to bytes");
+                            }
+
+                            final byte[] fdatBytes = fbaos.toByteArray();
+                            long ftoWrite = fdatBytes.length;
+
+                            // Write fdAT chunks, only splitting if the max chunk size is reached
+                            do {
+                                final PNGChunk newChunk = new PNGChunk();
+                                // fdAT chunk type
+                                newChunk.type[0] = 'f';
+                                newChunk.type[1] = 'd';
+                                newChunk.type[2] = 'A';
+                                newChunk.type[3] = 'T';
+                                // Copy as many bytes as the ZLib container has, or the maximum chunk size - 4
+                                final int toCopy = (int) Math.min(ftoWrite, Integer.MAX_VALUE - 4L);
+                                newChunk.data = new byte[toCopy + 4];
+                                System.arraycopy(fdatBytes, (int) (ftoWrite - fdatBytes.length), newChunk.data, 4, toCopy);
+                                chunkIter.add(newChunk);
+                                ftoWrite -= toCopy;
+                            } while (ftoWrite > 0);
+                        }
+                    } else {
+                        // Remove split fdAT chunks
+                        if (chunk.isfdAT()) {
+                            chunkIter.remove();
+                        }
+
+                        // If we've reached the next fcTL chunk, break
+                        if (chunk.isfcTL()) {
+                            break;
+                        }
+                    }
+                }
+
+                if (fdATIndex == -1) {
+                    throw new IOException("Incorrect chunk order in APNG");
+                }
+            }
+
+            int seq = 0;
+
+            for (final PNGChunk chunk : pngChunks) {
+                if (chunk.hasSeq()) {
+                    chunk.setSeq(seq);
+                    seq++;
+                }
+            }
+        }
+
         deflateStreamMapNonIDAT.forEach((c, d) -> {
             try {
                 c.setZLibCompressedNonIdat(d.write());
@@ -252,13 +358,22 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
     }
 
     private ZLibFile idat;
+    private List<ZLibFile> fdats;
 
     private Map<PNGChunk, DeflateFilesContainer> deflateStreamMapNonIDAT;
 
     @Override
     public List<DeflateStream> getDeflateStreams() {
         final ArrayList<DeflateStream> fileList = new ArrayList<>(idat.getDeflateStreams());
-        deflateStreamMapNonIDAT.values().forEach(e -> fileList.addAll(e.getDeflateStreams()));
+
+        if (fdats != null) {
+            fdats.forEach(e -> fileList.addAll(e.getDeflateStreams()));
+        }
+
+        if (deflateStreamMapNonIDAT != null) {
+            deflateStreamMapNonIDAT.values().forEach(e -> fileList.addAll(e.getDeflateStreams()));
+        }
+
         return fileList;
     }
 
@@ -284,6 +399,167 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
         return true;
     }
 
+    private static final class PNGChunkHelper {
+        public ZLibFile helperIdat;
+        public List<ZLibFile> helperFdats = null;
+        public Map<PNGChunk, DeflateFilesContainer> helperDeflateStreamMapNonIDAT = new HashMap<>();
+
+        private boolean outOfOrder = false;
+        private boolean readingfdAT = false;
+        private boolean readingIDAT = false;
+        private boolean seenacTL = false;
+        private boolean seenIDAT = false;
+        private boolean seenIEND = false;
+
+        private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        private int seq = 0;
+
+        private boolean shouldFlush(PNGChunk chunk) {
+            return (readingIDAT && !chunk.isIDAT()) || (readingfdAT && (chunk.isfcTL() || chunk.isIEND()));
+        }
+
+        private boolean flush() throws IOException {
+            if (readingIDAT) {
+                helperIdat = new ZLibFile();
+
+                if (!helperIdat.read(baos.toByteArray())) {
+                    return false;
+                }
+
+                helperIdat.deflateStream.setName("IDAT chunk");
+                seenIDAT = true;
+                readingIDAT = false;
+            } else {
+                assert readingfdAT;
+
+                if (helperFdats == null) {
+                    helperFdats = new ArrayList<>();
+                }
+
+                final ZLibFile fdat = new ZLibFile();
+                helperFdats.add(fdat);
+
+                if (!fdat.read(baos.toByteArray())) {
+                    return false;
+                }
+
+                fdat.deflateStream.setName("fdAT chunk " + helperFdats.size());
+                readingfdAT = false;
+            }
+
+            baos.reset();
+            return true;
+        }
+
+        private boolean setReadState(PNGChunk chunk) {
+            if (chunk.isfdAT()) {
+                if (!seenIDAT || readingIDAT) {
+                    return false;
+                }
+
+                readingfdAT = true;
+            } else if (chunk.isIDAT()) {
+                if (seenIDAT || readingfdAT) {
+                    return false;
+                }
+
+                readingIDAT = true;
+            }
+
+            return true;
+        }
+
+        private boolean submitChunkImpl(PNGChunk chunk) throws IOException {
+            if (seenIEND) {
+                outOfOrder = true;
+                return false;
+            }
+
+            // TODO Re-ordering out of order chunks
+            // See https://wiki.mozilla.org/APNG_Specification#Chunk_Sequence_Numbers
+            if (chunk.hasSeq()) {
+                if ((seenIDAT && !seenacTL) || (chunk.getSeq() != seq)) {
+                    outOfOrder = true;
+                    return false;
+                }
+
+                seq++;
+            }
+
+            if (shouldFlush(chunk) && !flush()) {
+                return false;
+            }
+
+            if (chunk.isIEND()) {
+                seenIEND = true;
+                return true;
+            }
+
+            if (chunk.isacTL()) {
+                // TODO Does the spec actually forbid multiple acTL chunks?
+                if (seenIDAT || seenacTL) {
+                    return false;
+                }
+
+                seenacTL = true;
+                return true;
+            }
+
+            if (!setReadState(chunk)) {
+                return false;
+            }
+
+            if (chunk.data.length > 0) {
+                if (readingIDAT) {
+                    baos.write(chunk.data);
+                } else if (readingfdAT && chunk.isfdAT()) {
+                    baos.write(chunk.data, 4, chunk.data.length - 4);
+                } else if (chunk.isZLibCompressedNonIdat()) {
+                    final byte[] zlibCompressed = chunk.getZLibCompressedNonIdat();
+
+                    if (zlibCompressed != null) {
+                        final ZLibFile zlibContainer = new ZLibFile();
+
+                        if (zlibContainer.read(zlibCompressed)) {
+                            zlibContainer.deflateStream.setName(chunk.type() + " chunk");
+                            helperDeflateStreamMapNonIDAT.put(chunk, zlibContainer);
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private boolean callFailed = false;
+
+        public boolean submitChunk(PNGChunk chunk) throws IOException {
+            if (callFailed) {
+                return false;
+            }
+
+            boolean submitRes;
+
+            try {
+                submitRes = submitChunkImpl(chunk);
+            } catch (final IOException e) {
+                submitRes = false;
+            }
+
+            if (!submitRes) {
+                callFailed = true;
+                return false;
+            }
+
+            return true;
+        }
+
+        public boolean goodEndState() {
+            return !callFailed && seenIEND && seenIDAT && !readingIDAT && !readingfdAT && !outOfOrder && ((helperFdats == null) || seenacTL);
+        }
+    }
+
     @Override
     public boolean read(InputStream is) throws IOException {
         // Check if data is likely PNG
@@ -293,49 +569,28 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
             return false;
         }
 
-        // Read all IDAT chunks to bytes
-        final ByteArrayOutputStream boas = new ByteArrayOutputStream();
+        final PNGChunkHelper helper = new PNGChunkHelper();
         pngChunks = new ArrayList<>();
-        deflateStreamMapNonIDAT = new HashMap<>();
         PNGChunk lastChunk;
 
         do {
             final PNGChunk nextChunk = new PNGChunk();
 
-            if (!nextChunk.read(is)) {
+            if (!nextChunk.read(is) || !helper.submitChunk(nextChunk)) {
+                idat = helper.helperIdat;
+                fdats = helper.helperFdats;
+                deflateStreamMapNonIDAT = helper.helperDeflateStreamMapNonIDAT;
                 return false;
-            }
-
-            if (nextChunk.data.length > 0) {
-                if (nextChunk.isIDAT()) {
-                    boas.write(nextChunk.data);
-                } else if (nextChunk.isZLibCompressedNonIdat()) {
-                    final byte[] zlibCompressed = nextChunk.getZLibCompressedNonIdat();
-
-                    if (zlibCompressed != null) {
-                        final ZLibFile zlibContainer = new ZLibFile();
-
-                        if (zlibContainer.read(zlibCompressed)) {
-                            zlibContainer.deflateStream.setName(nextChunk.type() + " chunk");
-                            deflateStreamMapNonIDAT.put(nextChunk, zlibContainer);
-                        }
-                    }
-                }
             }
 
             pngChunks.add(nextChunk);
             lastChunk = nextChunk;
         } while (!lastChunk.isIEND());
 
-        // Read the ZLib container from the IDAT bytes
-        idat = new ZLibFile();
-        final boolean res = idat.read(boas.toByteArray());
-
-        if (res) {
-            idat.deflateStream.setName("IDAT chunk");
-        }
-
-        return res;
+        idat = helper.helperIdat;
+        fdats = helper.helperFdats;
+        deflateStreamMapNonIDAT = helper.helperDeflateStreamMapNonIDAT;
+        return helper.goodEndState();
     }
 
     @Override
@@ -345,10 +600,47 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
 
     @Override
     public void close() throws IOException {
-        idat.close();
+        IOException e = null;
 
-        for (final DeflateFilesContainer container : deflateStreamMapNonIDAT.values()) {
-            container.close();
+        try {
+            if (idat != null) {
+                idat.close();
+            }
+        } catch (final IOException e1) {
+            e = new IOException("Closing PNG failed");
+            e.addSuppressed(e1);
+        }
+
+        if (fdats != null) {
+            for (final ZLibFile file : fdats) {
+                try {
+                    file.close();
+                } catch (final IOException e1) {
+                    if (e == null) {
+                        e = new IOException("Closing PNG failed");
+                    }
+
+                    e.addSuppressed(e1);
+                }
+            }
+        }
+
+        if (deflateStreamMapNonIDAT != null) {
+            for (final DeflateFilesContainer container : deflateStreamMapNonIDAT.values()) {
+                try {
+                    container.close();
+                } catch (final IOException e1) {
+                    if (e == null) {
+                        e = new IOException("Closing PNG failed");
+                    }
+
+                    e.addSuppressed(e1);
+                }
+            }
+        }
+
+        if (e != null) {
+            throw e;
         }
     }
 
