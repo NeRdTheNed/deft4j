@@ -251,7 +251,6 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
         });
     }
 
-    // TODO Support other deflate compressed chunks (zTXt ect)
     private ZLibFile idat;
 
     private Map<PNGChunk, DeflateFilesContainer> deflateStreamMapNonIDAT;
