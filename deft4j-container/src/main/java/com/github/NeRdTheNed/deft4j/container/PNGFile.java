@@ -226,6 +226,16 @@ public class PNGFile implements DeflateFilesContainer, ToGZipConvertible {
         idatGZ.setData(idat.deflateStream);
         idatGZ.setFilename("IDAT");
         converted.add(idatGZ);
+
+        if (fdats != null) {
+            for (final ZLibFile fdat : fdats) {
+                final GZFile fdatGZ = new GZFile();
+                fdatGZ.setData(fdat.deflateStream);
+                fdatGZ.setFilename("fdAT-" + converted.size());
+                converted.add(fdatGZ);
+            }
+        }
+
         final Map<String, Integer> seenChunks = new HashMap<>();
 
         for (final Entry<PNGChunk, DeflateFilesContainer> entry : deflateStreamMapNonIDAT.entrySet()) {
