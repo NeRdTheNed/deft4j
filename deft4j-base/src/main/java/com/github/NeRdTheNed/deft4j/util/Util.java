@@ -108,6 +108,70 @@ public final class Util {
         return getFileExtension(new File(fileName));
     }
 
+    /** Returns the last modified time of the given file in milliseconds, or the default value */
+    public static long getFileModifiedTimeMillis(Path file, long defaultTimeMillis) {
+        try {
+            return Files.getLastModifiedTime(file).toMillis();
+        } catch (final Exception e) {
+            return defaultTimeMillis;
+        }
+    }
+
+    /** Returns the last modified time of the given file in milliseconds, or the default value */
+    public static long getFileModifiedTimeMillis(File file, long defaultTimeMillis) {
+        return getFileModifiedTimeMillis(file.toPath(), defaultTimeMillis);
+    }
+
+    /** Returns the last modified time of the given file in milliseconds, or the current time */
+    public static long getFileModifiedTimeMillisOrCurrent(Path file) {
+        return getFileModifiedTimeMillis(file, System.currentTimeMillis());
+    }
+
+    /** Returns the last modified time of the given file in milliseconds, or the current time */
+    public static long getFileModifiedTimeMillisOrCurrent(File file) {
+        return getFileModifiedTimeMillisOrCurrent(file.toPath());
+    }
+
+    /** Returns the last modified time of the given file in milliseconds, or 0 */
+    public static long getFileModifiedTimeMillisOrZero(Path file) {
+        return getFileModifiedTimeMillis(file, 0);
+    }
+
+    /** Returns the last modified time of the given file in milliseconds, or 0 */
+    public static long getFileModifiedTimeMillisOrZero(File file) {
+        return getFileModifiedTimeMillisOrZero(file.toPath());
+    }
+
+    /** Returns the last modified time of the given file in seconds, or the default value in seconds */
+    public static long getFileModifiedTimeSeconds(Path file, long defaultTimeMillis) {
+        return getFileModifiedTimeMillis(file, defaultTimeMillis) / 1000L;
+    }
+
+    /** Returns the last modified time of the given file in seconds, or the default value in seconds */
+    public static long getFileModifiedTimeSeconds(File file, long defaultTimeMillis) {
+        return getFileModifiedTimeSeconds(file.toPath(), defaultTimeMillis);
+    }
+
+    /** Returns the last modified time of the given file in seconds, or the current time */
+    public static long getFileModifiedTimeSecondsOrCurrent(Path file) {
+        return getFileModifiedTimeMillisOrCurrent(file) / 1000L;
+    }
+
+    /** Returns the last modified time of the given file in seconds, or the current time */
+    public static long getFileModifiedTimeSecondsOrCurrent(File file) {
+        return getFileModifiedTimeSecondsOrCurrent(file.toPath());
+    }
+
+    /** Returns the last modified time of the given file in seconds, or 0 */
+    public static long getFileModifiedTimeSecondsOrZero(Path file) {
+        return getFileModifiedTimeMillisOrZero(file) / 1000L;
+    }
+
+    /** Returns the last modified time of the given file in seconds, or 0 */
+    public static long getFileModifiedTimeSecondsOrZero(File file) {
+        return getFileModifiedTimeSecondsOrZero(file.toPath());
+    }
+
     /** Rough "is printable character" check */
     private static boolean isPrintable(char value) {
         return !Character.isISOControl(value);
@@ -207,14 +271,19 @@ public final class Util {
     }
 
     /** Writes a byte array to a file */
-    private static boolean writeFile(File file, byte[] bytes) {
+    public static boolean writeFile(Path file, byte[] bytes) {
         try {
-            Files.write(file.toPath(), bytes);
+            Files.write(file, bytes);
             return true;
         } catch (final IOException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /** Writes a byte array to a file */
+    public static boolean writeFile(File file, byte[] bytes) {
+        return writeFile(file.toPath(), bytes);
     }
 
     /** Writes a byte array to a file */
