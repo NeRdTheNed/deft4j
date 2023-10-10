@@ -41,6 +41,10 @@ public class CompressionUtil {
 
     /** Construct the list of compressors for the given settings */
     private static Compressor[] getCompressors(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit) {
+        if (iter < 1) {
+            iter = 1;
+        }
+
         final List<Compressor> compressorsList = new ArrayList<>();
 
         if (java) {
