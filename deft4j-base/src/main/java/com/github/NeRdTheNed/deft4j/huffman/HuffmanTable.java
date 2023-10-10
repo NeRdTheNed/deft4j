@@ -39,9 +39,9 @@ public class HuffmanTable {
      * @param alt8 If use8, use 5 + 3 instead of 4 + 4
      * @return The packed codelengths
      */
-    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2) {
+    public static List<Integer> packCodeLengths(int[] litCodeLen, int[] distCodeLen, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2, boolean noRepZeros) {
         final List<Integer> lengths = new ArrayList<>();
-        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh, use8, use7, alt8, noRep, noZRep, noZRep2);
+        pack(lengths, Util.combine(litCodeLen, distCodeLen), ohh, use8, use7, alt8, noRep, noZRep, noZRep2, noRepZeros);
         return lengths;
     }
 
@@ -67,7 +67,7 @@ public class HuffmanTable {
      * @param use7 Use 4 + 3 instead of 6 + single
      * @param alt8 If use8, use 5 + 3 instead of 4 + 4
      */
-    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2) {
+    private static void pack(List<Integer> lengths, int[] codeLen, boolean ohh, boolean use8, boolean use7, boolean alt8, boolean noRep, boolean noZRep, boolean noZRep2, boolean noRepZeros) {
         final int n = codeLen.length;
         // Perform a run-length encoding
         int last = codeLen[0];                         // Get the first length value
@@ -107,7 +107,7 @@ public class HuffmanTable {
                     }
                 }
 
-                if (!noRep && (runLength > 0)) {
+                if (!noRep && (runLength > 0) && (!noRepZeros || (last != 0))) {
                     lengths.add(last);                     // Write the length value
                     runLength--;
                     int j = 6;
