@@ -11,7 +11,7 @@ import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
 public class GZFile implements DeflateFilesContainer {
-    // private static final int FTEXT    = 0b00001;
+    private static final int FTEXT    = 0b00001;
     private static final int FHCRC    = 0b00010;
     private static final int FEXTRA   = 0b00100;
     private static final int FNAME    = 0b01000;
@@ -183,6 +183,40 @@ public class GZFile implements DeflateFilesContainer {
         final List<DeflateStream> fileList = new ArrayList<>();
         fileList.add(deflateStream);
         return fileList;
+    }
+
+    public long getMTime() {
+        return time;
+    }
+
+    public void setMTime(long time) {
+        this.time = time;
+    }
+
+    public int getOS() {
+        return os;
+    }
+
+    public void setOS(int os) {
+        this.os = os;
+    }
+
+    public boolean getText() {
+        return (flags & FTEXT) != 0;
+    }
+
+    public void setText(boolean text) {
+        final boolean alreadyHasText = getText();
+
+        if (text) {
+            if (!alreadyHasText) {
+                flags |= FTEXT;
+            }
+        } else if (alreadyHasText) {
+            flags &= ~FTEXT;
+        }
+
+        assert text == getText();
     }
 
     @Override
