@@ -4,7 +4,7 @@
 
 deft4j is a (very inefficient) deflate stream parser and optimiser.
 
-It has support for parsing and writing ZIP, GZip, ZLib, and PNG files.
+It has support for parsing and writing ZIP, GZip, ZLib, and PNG files (including APNG and most deflate compressed PNG chunks).
 
 deft4j implements a few deflate stream optimisations:
 
