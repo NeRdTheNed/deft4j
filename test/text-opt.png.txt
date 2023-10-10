@@ -1,0 +1,5 @@
+File type recognised as PNG
+5 bits saved in stream 1 (zTXt chunk)
+42 bits saved in stream 2 (iTXt chunk)
+Total bits saved 47
+Saved 47 bits with optimisation

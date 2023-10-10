@@ -1,0 +1,4 @@
+File type recognised as GZip
+165 bits saved in stream 0 (unnamed stream)
+Total bits saved 165
+Saved 165 bits with optimisation

@@ -1,0 +1,4 @@
+File type recognised as PNG
+37295 bits saved in stream 0 (IDAT chunk)
+Total bits saved 37295
+Saved 37295 bits with optimisation

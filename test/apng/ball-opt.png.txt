@@ -1,0 +1,19 @@
+File type recognised as PNG
+6 bits saved in stream 0 (IDAT chunk)
+39 bits saved in stream 1 (fdAT chunk 1)
+211 bits saved in stream 2 (fdAT chunk 2)
+76 bits saved in stream 3 (fdAT chunk 3)
+227 bits saved in stream 4 (fdAT chunk 4)
+122 bits saved in stream 5 (fdAT chunk 5)
+96 bits saved in stream 6 (fdAT chunk 6)
+73 bits saved in stream 7 (fdAT chunk 7)
+2 bits saved in stream 8 (fdAT chunk 8)
+10 bits saved in stream 10 (fdAT chunk 10)
+13 bits saved in stream 11 (fdAT chunk 11)
+1 bits saved in stream 13 (fdAT chunk 13)
+7 bits saved in stream 15 (fdAT chunk 15)
+39 bits saved in stream 16 (fdAT chunk 16)
+101 bits saved in stream 18 (fdAT chunk 18)
+235 bits saved in stream 19 (fdAT chunk 19)
+Total bits saved 1258
+Saved 1258 bits with optimisation
