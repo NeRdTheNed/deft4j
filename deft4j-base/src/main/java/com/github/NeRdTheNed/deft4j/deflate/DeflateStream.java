@@ -259,7 +259,6 @@ public class DeflateStream {
     private static final boolean[] TRUE_FALSE = {true, false};
     private static final boolean[] FALSE_TRUE = {false, true};
     private static final boolean[] FALSE = {false};
-    private static final boolean[] TRUE = {true};
     private static final boolean[] ALT_8_ARR = TRY_ALT_8 ? new boolean[] {DEFAULT_8, ALT_8} : new boolean[] {DEFAULT_8};
 
     private static void addOptimisedRecoded(Consumer<? super Pair<? extends DeflateBlockHuffman, String>> callback, DeflateBlockHuffman toOptimise, String baseName, long position) {
@@ -281,7 +280,7 @@ public class DeflateStream {
             for (final boolean noRepZeros : FALSE_TRUE) {
                 for (final boolean prune : FALSE_TRUE) {
                     for (final boolean noRep : noRepZeros ? FALSE : FALSE_TRUE) {
-                        for (final boolean noZRep : noRepZeros ? TRUE : FALSE_TRUE) {
+                        for (final boolean noZRep : FALSE_TRUE) {
                             for (final boolean noZRep2 : FALSE_TRUE) {
                                 for (final boolean ohh : TRUE_FALSE) {
                                     if (ohh) {
