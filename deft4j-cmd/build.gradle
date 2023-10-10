@@ -60,6 +60,7 @@ jartighten {
     removeComments = true
     removeExtra = true
     removeDirectoryEntries = true
+    sortEntries = true
 }
 
 build.finalizedBy(jartighten)
