@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.Adler32;
 
 import com.github.NeRdTheNed.deft4j.deflate.DeflateStream;
 import com.github.NeRdTheNed.deft4j.util.Util;
 
-public class ZLibFile implements DeflateFilesContainer {
+public class ZLibFile implements DeflateFilesContainer, ToGZipConvertible {
     DeflateStream deflateStream;
 
     private int CMF;
@@ -96,6 +97,13 @@ public class ZLibFile implements DeflateFilesContainer {
     @Override
     public String fileType() {
         return "ZLib";
+    }
+
+    @Override
+    public List<GZFile> asGZipFiles() throws IOException {
+        final GZFile gz = new GZFile();
+        gz.setData(deflateStream);
+        return Collections.singletonList(gz);
     }
 
 }
