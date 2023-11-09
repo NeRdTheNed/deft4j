@@ -558,7 +558,13 @@ public class DeflateStream {
         // TODO Try other types of blocks
         // TODO Try merging more block types
         // TODO Try merging blocks at different passes
-        saved += mergeBlocks();
+        final long mergeSaved = mergeBlocks();
+        saved += mergeSaved;
+
+        if (mergeSaved > 0) {
+            return saved + optimise();
+        }
+
         return saved;
     }
 
