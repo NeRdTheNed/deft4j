@@ -1222,4 +1222,16 @@ public class DeflateBlockHuffman extends DeflateBlock {
         litlens = null;
         rlePairs = null;
     }
+
+    // TODO
+    @Override
+    public boolean canMerge(DeflateBlock append) {
+        return false;
+    }
+
+    // TODO
+    @Override
+    public DeflateBlock merge(DeflateBlock append) {
+        return null;
+    }
 }

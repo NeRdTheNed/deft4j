@@ -1,0 +1,4 @@
+File type recognised as GZip
+40 bits saved in stream 0 (deflate-store-2.txt)
+Total bits saved 40
+Saved 40 bits with optimisation

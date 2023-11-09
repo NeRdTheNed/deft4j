@@ -556,7 +556,87 @@ public class DeflateStream {
         }
 
         // TODO Try other types of blocks
-        // TODO Try merging blocks
+        // TODO Try merging more block types
+        // TODO Try merging blocks at different passes
+        saved += mergeBlocks();
+        return saved;
+    }
+
+    public long mergeBlocks() {
+        int block = 0;
+        int pass = 0;
+        long pos = 0;
+        long saved = 0;
+        boolean first = true;
+        DeflateBlock currentBlock = firstBlock;
+
+        while (currentBlock != null) {
+            boolean finishPass = true;
+            boolean didRemove = false;
+            final DeflateBlock nextBlock = currentBlock.getNext();
+
+            // Merge block if it's not empty. If it's the only block in a stream, ignore it.
+            if (first && (nextBlock == null)) {
+                pos += currentBlock.getSizeBits(pos + 3) + 3;
+            } else if (currentBlock.getUncompressedData().length > 0) {
+                pos += 3;
+
+                if ((nextBlock != null) && currentBlock.canMerge(nextBlock)) {
+                    final DeflateBlock merged = currentBlock.merge(nextBlock);
+                    final long currentSizeNoMerge = currentBlock.getSizeBits(pos);
+                    final long nextSizeNoMerge = nextBlock.getSizeBits(pos + currentSizeNoMerge + 3);
+                    final long currentSaved = (currentSizeNoMerge + 3 + nextSizeNoMerge) - merged.getSizeBits(pos);
+
+                    if ((merged != currentBlock) && (currentSaved > 0)) {
+                        finishPass = false;
+                        pass++;
+                        saved += currentSaved;
+
+                        if (PRINT_OPT_FINE) {
+                            System.out.println("Merge pass " + pass + " saved " + currentSaved + " bits in block " + block);
+                        }
+
+                        currentBlock.replace(merged);
+                        currentBlock.discard();
+                        merged.setNext(nextBlock.getNext());
+                        currentBlock = merged;
+
+                        if (first) {
+                            setFirstBlock(merged);
+                        }
+                    }
+                }
+
+                pos += currentBlock.getSizeBits(pos);
+            } else {
+                final long currentSaved = currentBlock.getSizeBits(pos + 3) + 3;
+
+                if (PRINT_OPT_FINE) {
+                    System.out.println("Removed empty block " + block + ", saved " + currentSaved + " bits");
+                }
+
+                saved += currentSaved;
+
+                if (first) {
+                    setFirstBlock(currentBlock.getNext());
+                }
+
+                currentBlock.remove();
+                didRemove = true;
+            }
+
+            if (finishPass) {
+                block++;
+                currentBlock = currentBlock.getNext();
+
+                if (first && !didRemove) {
+                    first = false;
+                }
+
+                pass = 0;
+            }
+        }
+
         return saved;
     }
 

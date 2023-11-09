@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.github.NeRdTheNed.deft4j.io.BitInputStream;
 import com.github.NeRdTheNed.deft4j.io.BitOutputStream;
 import com.github.NeRdTheNed.deft4j.util.BitInputStreamUtil;
+import com.github.NeRdTheNed.deft4j.util.Util;
 
 public class DeflateBlockUncompressed extends DeflateBlock {
     private byte[] storedData;
@@ -92,6 +93,27 @@ public class DeflateBlockUncompressed extends DeflateBlock {
     public void discard() {
         super.discard();
         storedData = null;
+    }
+
+    @Override
+    public boolean canMerge(DeflateBlock append) {
+        if (append != null) {
+            final long totalSize = getUncompressedData().length + append.getUncompressedData().length;
+
+            if (totalSize <= 65535) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public DeflateBlock merge(DeflateBlock append) {
+        final DeflateBlockUncompressed merged = new DeflateBlockUncompressed(getPrevious());
+        merged.setNext(append.getNext());
+        merged.fromUncompressed(Util.combine(getUncompressedData(), append.getUncompressedData()));
+        return merged;
     }
 
 }

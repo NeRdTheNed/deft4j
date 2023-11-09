@@ -24,6 +24,8 @@ public abstract class DeflateBlock {
     }
 
     public abstract DeflateBlock copy();
+    public abstract boolean canMerge(DeflateBlock append);
+    public abstract DeflateBlock merge(DeflateBlock append);
     public abstract long optimise();
     public abstract DeflateBlockType getDeflateBlockType();
     abstract boolean parse(BitInputStream is) throws IOException;
