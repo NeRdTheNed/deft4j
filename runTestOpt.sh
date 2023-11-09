@@ -1,6 +1,7 @@
 gradle build
 
 java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./test/deflate-store-2.txt.gz ./test/deflate-store-2-opt.txt.gz | tee ./test/deflate-store-2-opt.txt.gz.txt
+java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./test/lz-twice-twice.txt.gz ./test/lz-twice-twice-opt.txt.gz | tee ./test/lz-twice-twice-opt.txt.gz.txt
 java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./test/asyoulik/asyoulik-gzip.txt.gz ./test/asyoulik/asyoulik-gzip-opt.txt.gz | tee ./test/asyoulik/asyoulik-gzip-opt.txt.gz.txt
 java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./test/asyoulik/asyoulik-zopfli.txt.gz ./test/asyoulik/asyoulik-zopfli-opt.txt.gz | tee ./test/asyoulik/asyoulik-zopfli-opt.txt.gz.txt
 java -ea -jar ./deft4j-cmd/build/libs/deft4j-cmd-all.jar optimise ./test/text.png ./test/text-opt.png | tee ./test/text-opt.png.txt

@@ -1223,15 +1223,50 @@ public class DeflateBlockHuffman extends DeflateBlock {
         rlePairs = null;
     }
 
-    // TODO
+    // TODO Merge dynamic blocks
     @Override
     public boolean canMerge(DeflateBlock append) {
-        return false;
+        return (append != null) && ((append.getDeflateBlockType() == DeflateBlockType.FIXED) || (append.getDeflateBlockType() == DeflateBlockType.DYNAMIC));
     }
 
-    // TODO
+    // TODO Merge dynamic blocks
     @Override
     public DeflateBlock merge(DeflateBlock append) {
+        if ((append.getDeflateBlockType() == DeflateBlockType.FIXED) || (append.getDeflateBlockType() == DeflateBlockType.DYNAMIC)) {
+            DeflateBlockHuffman thisFixed;
+
+            if (getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
+                thisFixed = (DeflateBlockHuffman) copy();
+                thisFixed.recodeToFixedHuffman();
+            } else {
+                thisFixed = this;
+            }
+
+            DeflateBlockHuffman otherFixed;
+
+            if (append.getDeflateBlockType() == DeflateBlockType.DYNAMIC) {
+                otherFixed = (DeflateBlockHuffman) append.copy();
+                otherFixed.recodeToFixedHuffman();
+            } else {
+                otherFixed = (DeflateBlockHuffman) append;
+            }
+
+            final DeflateBlockHuffman merged = (DeflateBlockHuffman) thisFixed.copy();
+            merged.decodedData = Util.combine(getUncompressedData(), append.getUncompressedData());
+            merged.ensureDidCopyLitLens();
+            final LitLen eob = merged.litlens.remove(merged.litlens.size() - 1);
+            merged.litlens.addAll(otherFixed.litlens);
+            merged.sizeBits -= merged.litlenSizeBits;
+
+            for (final LitLen litlenThis : otherFixed.litlens) {
+                merged.litlenSizeBits += getLitLenSize(litlenThis, merged.litlenDec, merged.distDec);
+            }
+
+            merged.litlenSizeBits -= getLitLenSize(eob, merged.litlenDec, merged.distDec);
+            merged.sizeBits += merged.litlenSizeBits;
+            return merged;
+        }
+
         return null;
     }
 }

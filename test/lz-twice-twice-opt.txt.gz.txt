@@ -1,0 +1,4 @@
+File type recognised as GZip
+10 bits saved in stream 0 (lz.txt)
+Total bits saved 10
+Saved 10 bits with optimisation
