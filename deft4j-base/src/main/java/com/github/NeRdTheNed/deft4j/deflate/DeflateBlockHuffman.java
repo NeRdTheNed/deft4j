@@ -1257,11 +1257,10 @@ public class DeflateBlockHuffman extends DeflateBlock {
             final LitLen eob = merged.litlens.remove(merged.litlens.size() - 1);
             merged.litlens.addAll(otherFixed.litlens);
             merged.sizeBits -= merged.litlenSizeBits;
-
-            for (final LitLen litlenThis : otherFixed.litlens) {
+            /*for (final LitLen litlenThis : otherFixed.litlens) {
                 merged.litlenSizeBits += getLitLenSize(litlenThis, merged.litlenDec, merged.distDec);
-            }
-
+            }*/
+            merged.litlenSizeBits += otherFixed.litlenSizeBits;
             merged.litlenSizeBits -= getLitLenSize(eob, merged.litlenDec, merged.distDec);
             merged.sizeBits += merged.litlenSizeBits;
             return merged;
