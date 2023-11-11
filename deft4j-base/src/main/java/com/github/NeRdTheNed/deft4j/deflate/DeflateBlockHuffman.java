@@ -385,12 +385,12 @@ public class DeflateBlockHuffman extends DeflateBlock {
             if (check.dist != 0L) {
                 assert check.decodedVal != null;
                 final int litlen = Constants.len2litlen((int) check.litlen, check.edgecase) - Constants.LITLEN_TBL_OFFSET;
-                litSeen[litlen] = true;
 
                 if (litNoAllow[litlen]) {
                     continue;
                 }
 
+                litSeen[litlen] = true;
                 final int checkSize = getLitLenSize(check, litlenDec, distDec);
                 int totalSize = 0;
 
@@ -494,7 +494,6 @@ public class DeflateBlockHuffman extends DeflateBlock {
         dynamicHeaderSizeBits = 0L;
         numLitlenLens = litlenDec.table.codeLen.length;
         numDistLens = distDec.table.codeLen.length;
-        rlePairs = new ArrayList<>();
         didCopyRLEPairs = true;
         final List<Integer> repack = HuffmanTable.packCodeLengths(litlenDec.table.codeLen, distDec.table.codeLen, ohh, use8, use7, alt8, noRep, noZRep, noZRep2, noRepZeros);
         codeLenDec = Huffman.ofRLEPacked(repack);
@@ -508,6 +507,7 @@ public class DeflateBlockHuffman extends DeflateBlock {
         final Iterator<Integer> iter = repack.iterator();
         LitLen prePair = null;
         final int combinedLens = numLitlenLens + numDistLens;
+        rlePairs = new ArrayList<>(combinedLens);
 
         while (i < combinedLens) {
             final int sym = iter.next();
