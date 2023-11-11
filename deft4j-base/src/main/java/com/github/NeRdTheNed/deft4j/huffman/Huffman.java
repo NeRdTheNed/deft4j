@@ -96,8 +96,8 @@ public class Huffman {
 
     public Huffman(HuffmanTable table) {
         this.table = table;
-        codes = new ArrayList<>();
         final int len = this.table.code.length;
+        codes = new ArrayList<>(len);
 
         for (int i = 0; i < len; i++) {
             // Janky hack mate!
