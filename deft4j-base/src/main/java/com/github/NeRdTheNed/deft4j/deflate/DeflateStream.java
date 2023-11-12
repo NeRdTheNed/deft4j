@@ -601,7 +601,13 @@ public class DeflateStream {
 
                         currentBlock.replace(merged);
                         currentBlock.discard();
-                        merged.setNext(nextBlock.getNext());
+                        final DeflateBlock next = nextBlock.getNext();
+                        merged.setNext(next);
+
+                        if (next != null) {
+                            next.setPrevious(merged);
+                        }
+
                         currentBlock = merged;
 
                         if (first) {
