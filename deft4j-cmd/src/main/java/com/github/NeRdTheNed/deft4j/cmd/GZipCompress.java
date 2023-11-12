@@ -40,6 +40,9 @@ class GZipCompress implements Callable<Integer> {
     @Option(names = { "--zopfli-iter", "--iter", "-z" }, defaultValue = "20", description = "Zopfli iterations")
     int iter = 20;
 
+    @Option(names = { "--merge-blocks", "-b" }, negatable = true, defaultValue = "true", fallbackValue = "true", description = "Try merging deflate blocks. May majorly increase time spent optimising files.")
+    boolean mergeBlocks = true;
+
     @Option(names = { "--keep-name", "-n" }, negatable = true, defaultValue = "true", fallbackValue = "true", description = "Write filename to GZip header")
     boolean name = true;
 
@@ -55,10 +58,10 @@ class GZipCompress implements Callable<Integer> {
     @Option(names = { "--text", "-T" }, defaultValue = "false", description = "File is ASCII text")
     boolean text;
 
-    private static CompressionUtil getComp(CompressMode mode, int iter) {
+    private static CompressionUtil getComp(CompressMode mode, boolean mergeBlocks, int iter) {
         final boolean zopfli = mode.ordinal() >= CompressMode.ZOPFLI.ordinal();
         final Strategy strat = mode.ordinal() >= CompressMode.ZOPFLI_EXTENSIVE.ordinal() ? Strategy.EXTENSIVE : Strategy.MULTI_CHEAP;
-        return new CompressionUtil(true, true, mode.ordinal() >= CompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, iter, strat, true, true);
+        return new CompressionUtil(true, true, mode.ordinal() >= CompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, iter, strat, true, true, mergeBlocks);
     }
 
     private static int getOS(int fallback) {
@@ -107,7 +110,7 @@ class GZipCompress implements Callable<Integer> {
             return 1;
         }
 
-        final CompressionUtil compUtil = getComp(recompressMode, iter);
+        final CompressionUtil compUtil = getComp(recompressMode, mergeBlocks, iter);
         final byte[] uncompressed;
 
         try

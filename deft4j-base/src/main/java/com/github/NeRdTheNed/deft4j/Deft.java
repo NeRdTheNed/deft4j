@@ -14,10 +14,15 @@ public class Deft {
 
     /** Optimise a raw deflate stream */
     public static byte[] optimiseDeflateStream(byte[] original) {
+        return optimiseDeflateStream(original, true);
+    }
+
+    /** Optimise a raw deflate stream */
+    public static byte[] optimiseDeflateStream(byte[] original, boolean mergeBlocks) {
         final DeflateStream stream = new DeflateStream();
 
         try {
-            if (stream.parse(original) && (stream.optimise() > 0)) {
+            if (stream.parse(original) && (stream.optimise(mergeBlocks) > 0)) {
                 return stream.asBytes();
             }
         } catch (final IOException e) {

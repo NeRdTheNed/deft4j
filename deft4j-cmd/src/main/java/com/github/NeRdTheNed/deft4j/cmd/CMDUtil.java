@@ -37,18 +37,20 @@ public class CMDUtil {
 
     /** Recompress each deflate stream, and optimise. If the result is smaller, use it. */
     private final boolean recompress;
+    private final boolean mergeBlocks;
 
     private final CompressionUtil compUtil;
 
-    CMDUtil(RecompressMode recompressMode, int passes) {
+    CMDUtil(RecompressMode recompressMode, boolean mergeBlocks, int passes) {
         recompress = recompressMode.ordinal() > RecompressMode.NONE.ordinal();
         final boolean zopfli = recompressMode.ordinal() >= RecompressMode.ZOPFLI.ordinal();
         final Strategy strat = recompressMode.ordinal() >= RecompressMode.ZOPFLI_EXTENSIVE.ordinal() ? Strategy.EXTENSIVE : Strategy.MULTI_CHEAP;
-        compUtil = recompress ? new CompressionUtil(true, true, recompressMode.ordinal() >= RecompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, passes, strat, true, true) : null;
+        compUtil = recompress ? new CompressionUtil(true, true, recompressMode.ordinal() >= RecompressMode.ZOPFLI_VERY_EXTENSIVE.ordinal(), zopfli, passes, strat, true, true, mergeBlocks) : null;
+        this.mergeBlocks = mergeBlocks;
     }
 
-    CMDUtil(RecompressMode recompressMode) {
-        this(recompressMode, 20);
+    CMDUtil(RecompressMode recompressMode, boolean mergeBlocks) {
+        this(recompressMode, mergeBlocks, 20);
     }
 
     /** Read from the given input stream into the container, optimise, and write to the output stream */
@@ -65,7 +67,7 @@ public class CMDUtil {
                 System.out.println(container.getStreamInfo());
             }
 
-            final long saved = NO_OPT ? 0 : container.optimise();
+            final long saved = NO_OPT ? 0 : container.optimise(mergeBlocks);
 
             if (saved != 0) {
                 System.out.println("Saved " + saved + " bits with optimisation");
@@ -84,7 +86,7 @@ public class CMDUtil {
                     final ByteArrayInputStream bais = new ByteArrayInputStream(recompresed);
 
                     if (recompStream.parse(bais)) {
-                        recompStream.optimise();
+                        recompStream.optimise(mergeBlocks);
                         final long recompSize = recompStream.getSizeBits();
                         final long originalSize = stream.getSizeBits();
                         final long streamSaved = originalSize - recompSize;

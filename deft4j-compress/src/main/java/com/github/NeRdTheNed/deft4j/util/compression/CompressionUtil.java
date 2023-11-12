@@ -38,6 +38,7 @@ public class CompressionUtil {
 
     private final boolean useDeft;
     private final boolean compareDeft;
+    private final boolean mergeBlocks;
 
     /** Construct the list of compressors for the given settings */
     private static Compressor[] getCompressors(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit) {
@@ -76,22 +77,23 @@ public class CompressionUtil {
         return compressorsList.toArray(new Compressor[0]);
     }
 
-    private CompressionUtil(Compressor[] compressors, boolean useDeft, boolean compareDeft) {
+    private CompressionUtil(Compressor[] compressors, boolean useDeft, boolean compareDeft, boolean mergeBlocks) {
         this.compressors = compressors;
         this.useDeft = useDeft;
         this.compareDeft = compareDeft;
+        this.mergeBlocks = mergeBlocks;
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft) {
-        this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft, compareDeft);
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, int defaultSplit, boolean useDeft, boolean compareDeft, boolean mergeBlocks) {
+        this(getCompressors(java, jzlib, jzopfli, cafeundzopfli, iter, mode, defaultSplit), useDeft, compareDeft, mergeBlocks);
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, boolean useDeft, boolean compareDeft) {
-        this(java, jzlib, jzopfli, cafeundzopfli, iter, mode, JZOPFLI_DEFAULT_SPLIT, useDeft, compareDeft);
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, int iter, Strategy mode, boolean useDeft, boolean compareDeft, boolean mergeBlocks) {
+        this(java, jzlib, jzopfli, cafeundzopfli, iter, mode, JZOPFLI_DEFAULT_SPLIT, useDeft, compareDeft, mergeBlocks);
     }
 
-    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, Strategy mode, boolean useDeft, boolean compareDeft) {
-        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, useDeft, compareDeft);
+    public CompressionUtil(boolean java, boolean jzlib, boolean jzopfli, boolean cafeundzopfli, Strategy mode, boolean useDeft, boolean compareDeft, boolean mergeBlocks) {
+        this(java, jzlib, jzopfli, cafeundzopfli, ZOPFLI_ITER, mode, useDeft, compareDeft, mergeBlocks);
     }
 
     private Supplier<ExecutorService> execService = () -> {
@@ -110,7 +112,7 @@ public class CompressionUtil {
             int tasks = 0;
 
             for (final Compressor compressor : compressors) {
-                compService.submit(new CompressorTask(compressor, uncompressedData, useDeft));
+                compService.submit(new CompressorTask(compressor, uncompressedData, useDeft, mergeBlocks));
                 tasks++;
             }
 
@@ -149,7 +151,7 @@ public class CompressionUtil {
 
                     for (byte[] currentResult : currentResultList) {
                         if (useDeft) {
-                            currentResult = Deft.optimiseDeflateStream(currentResult);
+                            currentResult = Deft.optimiseDeflateStream(currentResult, mergeBlocks);
                         }
 
                         if ((compressedData == null) || (compareDeft ? Deft.getSizeBitsFallback(currentResult) < currentSizeBits : currentResult.length < compressedData.length)) {

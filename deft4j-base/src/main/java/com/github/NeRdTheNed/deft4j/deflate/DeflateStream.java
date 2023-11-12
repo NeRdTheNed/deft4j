@@ -490,6 +490,10 @@ public class DeflateStream {
     }
 
     public long optimise() {
+        return optimise(true);
+    }
+
+    public long optimise(boolean mergeBlocks) {
         int block = 0;
         int pass = 0;
         long pos = 0;
@@ -558,14 +562,7 @@ public class DeflateStream {
         // TODO Try other types of blocks
         // TODO Try merging more block types
         // TODO Try merging blocks at different passes
-        final long mergeSaved = mergeBlocks();
-        saved += mergeSaved;
-
-        if (mergeSaved > 0) {
-            return saved + optimise();
-        }
-
-        return saved;
+        return mergeBlocks ? saved + mergeBlocks() : saved;
     }
 
     public long mergeBlocks() {

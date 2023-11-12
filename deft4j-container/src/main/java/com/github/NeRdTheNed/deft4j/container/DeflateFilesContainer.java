@@ -15,7 +15,7 @@ public interface DeflateFilesContainer extends Closeable {
     boolean RECALC = true;
 
     /** Optimise all given streams. Returns the total amount of bits saved. */
-    static long optimise(List<DeflateStream> streams) {
+    static long optimise(List<DeflateStream> streams, boolean mergeBlocks) {
         long savedTotal = 0;
         final int size = streams.size();
 
@@ -26,7 +26,7 @@ public interface DeflateFilesContainer extends Closeable {
                 System.out.println("Stream " + defStream + " (" + stream.getName() + ")");
             }
 
-            final long saved = stream.optimise();
+            final long saved = stream.optimise(mergeBlocks);
 
             if (Deft.PRINT_OPT && (saved > 0)) {
                 System.out.println(saved + " bits saved in stream " + defStream + " (" + stream.getName() + ")");
@@ -64,7 +64,12 @@ public interface DeflateFilesContainer extends Closeable {
 
     /** Optimise all streams in this container. Returns the total amount of bits saved. */
     default long optimise() {
-        return optimise(getDeflateStreams());
+        return optimise(true);
+    }
+
+    /** Optimise all streams in this container. Returns the total amount of bits saved. */
+    default long optimise(boolean mergeBlocks) {
+        return optimise(getDeflateStreams(), mergeBlocks);
     }
 
     /** Returns debug information for the given stream */

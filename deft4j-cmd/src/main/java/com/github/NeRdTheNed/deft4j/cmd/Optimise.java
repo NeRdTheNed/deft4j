@@ -30,9 +30,12 @@ class Optimise implements Callable<Integer> {
     @Option(names = { "--zopfli-iter", "--iter", "-I" }, defaultValue = "20", description = "Zopfli iterations. More iterations increases time spent optimising files.")
     int recompressZopfliPasses = 20;
 
+    @Option(names = { "--merge-blocks", "-b" }, negatable = true, defaultValue = "true", fallbackValue = "true", description = "Try merging deflate blocks. May majorly increase time spent optimising files.")
+    boolean mergeBlocks = true;
+
     @Override
     public Integer call() throws Exception {
-        final CMDUtil deft = new CMDUtil(recompressMode, recompressZopfliPasses);
+        final CMDUtil deft = new CMDUtil(recompressMode, mergeBlocks, recompressZopfliPasses);
         final boolean didOpt;
 
         try {
