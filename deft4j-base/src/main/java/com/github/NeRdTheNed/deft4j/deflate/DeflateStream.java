@@ -585,7 +585,7 @@ public class DeflateStream {
                 pos += 3;
 
                 if ((nextBlock != null) && currentBlock.canMerge(nextBlock)) {
-                    final DeflateBlock merged = currentBlock.merge(nextBlock);
+                    final DeflateBlock merged = optimiseBlock(currentBlock.merge(nextBlock), pos);
                     final long currentSizeNoMerge = currentBlock.getSizeBits(pos);
                     final long nextSizeNoMerge = nextBlock.getSizeBits(pos + currentSizeNoMerge + 3);
                     final long currentSaved = (currentSizeNoMerge + 3 + nextSizeNoMerge) - merged.getSizeBits(pos);
